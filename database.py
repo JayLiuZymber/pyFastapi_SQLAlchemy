@@ -16,7 +16,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:qazqsedc/@127.0.0.1:3306/db"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:qazqsedc@127.0.0.1:3306/db"
 
 # echo=True表示引擎將用repr()函式記錄所有語句及其引數列表到日誌
 engine = create_engine(
