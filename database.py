@@ -5,6 +5,7 @@ https://www.796t.com/article.php?id=293287
 所以需要進行安裝這兩個工具包：
 pip install sqlalchemy
 pip install pymysql
+pip install cryptography
 
 資料庫配置相關
 在資料庫相關的配置檔案中，首先建立一個SQLAlchemy的"engine"，
