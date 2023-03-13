@@ -90,6 +90,11 @@ def get_db():
     finally:
         db.close()
 
+# 首頁
+@app.get("/")
+def read_root():
+    return {"歡迎使用": "進銷存管理系統"}
+
 # 新建使用者
 @app.post("/users/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
