@@ -11,19 +11,15 @@ pip install cryptography
 在資料庫相關的配置檔案中，首先建立一個SQLAlchemy的"engine"，
 然後建立SessionLocal例項進行會話，最後建立模型類的基類
 
-Database Name(schemas)名稱:db 設定:
-id      INT         PK+NN+AI
-name    VARCHAR(45)             NULL
-email   VARCHAR(45) NN
-hashed_password VARCHAR(45) NN
-is_active   TINYINT NN          '1'
+建立資料庫 MySQL命令:
+create database erp charset=utf8;
 '''
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:qazqsedc@127.0.0.1:3306/db?charset=utf8"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:qazqsedc@127.0.0.1:3306/erp?charset=utf8"
 
 # echo=True表示引擎將用repr()函式記錄所有語句及其引數列表到日誌
 engine = create_engine(

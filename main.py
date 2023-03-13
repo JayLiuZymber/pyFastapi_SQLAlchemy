@@ -3,68 +3,45 @@
 主檔案
 主檔案進行資料庫初始化、FastAPI例項建立以及處理各種請求
 進入到互動文件檢視：
-http://127.0.0.1:8000/users/
-http://127.0.0.1:8000/docs POST Request body
-# 請求
+http://127.0.0.1:8000/supps/
+http://127.0.0.1:8000/docs->POST Request body
+# 請求 Postman->POST body raw JSON
 {
-  "email": "hhh@example113.com",
-  "password": "ss123456"
+    "taxid": 22099131,
+    "name": "台灣積體電路製造股份有限公司"
 }
 
 # 響應
 {
-  "email": "hhh@example113.com",
-  "id": 7,
-  "is_active": true
+    "taxid": 22099131,
+    "name": "台灣積體電路製造股份有限公司",
+    "products": []
 }
 
-http://127.0.0.1:8000/user/7
+http://127.0.0.1:8000/supp/22099131
 # 響應
 {
-  "email": "hhh@example113.com",
-  "id": 7,
-  "is_active": true
+    "taxid": 22099131,
+    "name": "台灣積體電路製造股份有限公司",
+    "products": []
 }
+
+http://127.0.0.1:8000/supp/22099131/prob
+# 請求 POST
+{
+  "port_number": 1001001,
+  "name": "Wifi IC"
+}
+# 響應
+{
+    "id": 1,
+    "supplier_taxid": 22099131,
+    "port_number": 1001001,
+    "name": "Wifi IC"
+}
+
 
 當啟動專案後，會生成新的Item資料表，以及與User表之間建立關係
-# SQL User表
-create table users
-(
-    id              int auto_increment
-        primary key,
-    email           varchar(32) null,
-    hashed_password varchar(32) null,
-    is_active       tinyint(1)  null,
-    constraint ix_users_email
-        unique (email)
-);
-
-create index ix_users_id
-    on users (id);
-
-# Item表
-create table items
-(
-    id          int auto_increment
-        primary key,
-    title       varchar(32) null,
-    description varchar(32) null,
-    owner_id    int         null,
-    constraint items_ibfk_1
-        foreign key (owner_id) references users (id)
-);
-
-create index ix_items_description
-    on items (description);
-
-create index ix_items_id
-    on items (id);
-
-create index ix_items_title
-    on items (title);
-
-create index owner_id
-    on items (owner_id);
 '''
 
 from typing import List
@@ -95,8 +72,45 @@ def get_db():
 def read_root():
     return {"歡迎使用": "進銷存管理系統"}
 
+# 新建供應商
+@app.post("/supps/", response_model=schemas.Supplier)
+def create_supp(supplier: schemas.SupplierCreate, db: Session = Depends(get_db)):
+    return crud.db_create_supp(db=db, supp=supplier)
+
+@app.get("/supp/{supp_taxid}", response_model=schemas.Supplier)
+def read_supp(supp_taxid: int, db: Session = Depends(get_db)):
+    db_supp = crud.get_supp(db, supp_taxid=supp_taxid)
+    if not db_supp:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+    return db_supp
+
+# 讀取供應商擁有的product
+@app.get("/probs/", response_model=List[schemas.Product])
+def read_products(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
+    products = crud.get_product(db=db, skip=skip, limit=limit)
+    return products
+
+# 建立供應商的product
+@app.post("/supp/{supp_taxid}/prob", response_model=schemas.Product)
+def create_product_supp(supp_taxid: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    return crud.db_create_supp_product(db=db, product=product, supp_taxid=supp_taxid)
+
+# -----------------------------------------------------------------------------
+# 新建客戶
+@app.post("/custs/", response_model=schemas.Customer)
+def create_cust(customer: schemas.CustomerCreate, db: Session = Depends(get_db)):
+    return crud.db_create_cust(db=db, cust=customer)
+
+@app.get("/cust/{cust_taxid}", response_model=schemas.Customer)
+def read_cust(cust_taxid: int, db: Session = Depends(get_db)):
+    db_cust = crud.get_cust(db, cust_cust_taxid=cust_taxid)
+    if not db_cust:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return db_cust
+"""
+# -----------------------------------------------------------------------------
 # 新建使用者
-@app.post("/users/", response_model=schemas.User)
+@ app.post("/users/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.db_create_user(db=db, user=user)
 
@@ -114,11 +128,11 @@ def read_items(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
     items = crud.get_item(db=db, skip=skip, limit=limit)
     return items
 
-
 # 建立使用者的item
 @app.post("/users/{user_id}/items", response_model=schemas.Item)
 def create_item_user(user_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)):
     return crud.create_user_item(db=db, item=item, user_id=user_id)
-
+ """
+# -----------------------------------------------------------------------------
 if __name__ == '__main__':
     uvicorn.run(app=app, host="127.0.0.1", port=8000)
