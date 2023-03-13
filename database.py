@@ -10,6 +10,13 @@ pip install cryptography
 資料庫配置相關
 在資料庫相關的配置檔案中，首先建立一個SQLAlchemy的"engine"，
 然後建立SessionLocal例項進行會話，最後建立模型類的基類
+
+Database Name(schemas)名稱:db 設定:
+id      INT         PK+NN+AI
+name    VARCHAR(45)             NULL
+email   VARCHAR(45) NN
+hashed_password VARCHAR(45) NN
+is_active   TINYINT NN          '1'
 '''
 
 from sqlalchemy import create_engine

@@ -4,6 +4,7 @@
 主檔案進行資料庫初始化、FastAPI例項建立以及處理各種請求
 進入到互動文件檢視：
 http://127.0.0.1:8000/users/
+http://127.0.0.1:8000/docs POST Request body
 # 請求
 {
   "email": "hhh@example113.com",
@@ -17,7 +18,7 @@ http://127.0.0.1:8000/users/
   "is_active": true
 }
 
-    http://127.0.0.1:8000/user/7
+http://127.0.0.1:8000/user/7
 # 響應
 {
   "email": "hhh@example113.com",
