@@ -5,12 +5,11 @@
 進入到互動文件檢視：
 http://127.0.0.1:8000/supps/
 http://127.0.0.1:8000/docs->POST Request body
-# 請求 Postman->POST body raw JSON
+# 請求 Postman->POST body raw JSON->SEND
 {
-    "taxid": 22099131,
+    "taxid": "22099131",
     "name": "台灣積體電路製造股份有限公司"
 }
-
 # 響應
 {
     "taxid": 22099131,
@@ -19,17 +18,17 @@ http://127.0.0.1:8000/docs->POST Request body
 }
 
 http://127.0.0.1:8000/supp/22099131
-# 響應
+# 響應 Postman->GET
 {
     "taxid": 22099131,
     "name": "台灣積體電路製造股份有限公司",
     "products": []
 }
 
-http://127.0.0.1:8000/supp/22099131/prob
+http://127.0.0.1:8000/supp/22099131/prod
 # 請求 POST
 {
-  "port_number": 1001001,
+  "port_number": "1001001",
   "name": "Wifi IC"
 }
 # 響應
@@ -40,6 +39,12 @@ http://127.0.0.1:8000/supp/22099131/prob
     "name": "Wifi IC"
 }
 
+http://127.0.0.1:8000/custs/
+# 請求 POST = 響應
+{
+    "taxid": "00000022",
+    "name": "泰煜建材股份有限公司"
+}
 
 當啟動專案後，會生成新的Item資料表，以及與User表之間建立關係
 '''
@@ -85,13 +90,13 @@ def read_supp(supp_taxid: int, db: Session = Depends(get_db)):
     return db_supp
 
 # 讀取供應商擁有的product
-@app.get("/probs/", response_model=List[schemas.Product])
+@app.get("/prods/", response_model=List[schemas.Product])
 def read_products(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
     products = crud.get_product(db=db, skip=skip, limit=limit)
     return products
 
 # 建立供應商的product
-@app.post("/supp/{supp_taxid}/prob", response_model=schemas.Product)
+@app.post("/supp/{supp_taxid}/prod", response_model=schemas.Product)
 def create_product_supp(supp_taxid: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
     return crud.db_create_supp_product(db=db, product=product, supp_taxid=supp_taxid)
 
@@ -103,7 +108,7 @@ def create_cust(customer: schemas.CustomerCreate, db: Session = Depends(get_db))
 
 @app.get("/cust/{cust_taxid}", response_model=schemas.Customer)
 def read_cust(cust_taxid: int, db: Session = Depends(get_db)):
-    db_cust = crud.get_cust(db, cust_cust_taxid=cust_taxid)
+    db_cust = crud.get_cust(db, cust_taxid=cust_taxid)
     if not db_cust:
         raise HTTPException(status_code=404, detail="Customer not found")
     return db_cust

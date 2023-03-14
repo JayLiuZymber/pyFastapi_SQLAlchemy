@@ -18,7 +18,7 @@ class ProductBase(BaseModel):
     cost_price: int = 0
     sell_price: int = 0
     amount: int = 0
-    
+
 class ProductCreate(ProductBase):
     pass
 
@@ -31,7 +31,7 @@ class Product(BaseModel):
 
     class Config:
         orm_mode = True
-        
+
 # -----------------------------------------------------------------------------
 # 供應商
 class SupplierBase(BaseModel):
@@ -81,7 +81,6 @@ class CustomerCreate(CustomerBase):
 class Customer(CustomerBase):
     taxid: int
     name: str
-    products: List[Product] = []
 
     class Config:
         orm_mode = True
