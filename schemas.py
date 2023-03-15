@@ -56,7 +56,7 @@ class PurchaseOrderBase(BaseModel):
     amount: int
     total_price: int
 
-class SellOrderaCreate(PurchaseOrderBase):
+class PurchaseOrderCreate(PurchaseOrderBase):
     supplier_taxid: int
     product_id: int
 
