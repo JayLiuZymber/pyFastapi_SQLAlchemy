@@ -84,7 +84,7 @@ def create_supp(supplier: schemas.SupplierCreate, db: Session = Depends(get_db))
     return crud.db_create_supp(db=db, supp=supplier)
 
 # 刪除供應商
-@app.delete("/supp/{supplier_taxid}", response_model=schemas.Supplier)
+@app.delete("/supp/{supplier_taxid}", response_model=bool)
 def delete_supp(supplier_taxid: int, db: Session = Depends(get_db)):
     db_supp = crud.db_get_supp(db, supp_taxid=supplier_taxid)
     if not db_supp:
@@ -125,7 +125,7 @@ def create_supp_product(supplier_taxid: int, product: schemas.ProductCreate, db:
 def create_cust(customer: schemas.CustomerCreate, db: Session = Depends(get_db)):
     return crud.db_create_cust(db=db, cust=customer)
 
-@app.delete("/cust/{customer_taxid}", response_model=schemas.Customer)
+@app.delete("/cust/{customer_taxid}", response_model=bool)
 def delete_cust(customer_taxid: int, db: Session = Depends(get_db)):
     db_cust = crud.db_get_cust(db, cust_taxid=customer_taxid)
     if not db_cust:
