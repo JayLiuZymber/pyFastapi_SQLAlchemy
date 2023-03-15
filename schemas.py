@@ -8,19 +8,20 @@
 '''
 
 from typing import Optional, List
+from datetime import datetime
 from pydantic import BaseModel
 
 # -----------------------------------------------------------------------------
 # 商品
 class ProductBase(BaseModel):
-    port_number: int
-    name: str
     cost_price: int = 0
     sell_price: int = 0
     amount: int = 0
 
 class ProductCreate(ProductBase):
-    pass
+	# 請求模型驗證
+    port_number: int
+    name: str
 
 class Product(BaseModel):
     # 響應模型
@@ -38,10 +39,12 @@ class SupplierBase(BaseModel):
     name: str
 
 class SupplierCreate(SupplierBase):
+    # 請求模型驗證
     taxid: int
 
 class Supplier(SupplierBase):
     # 響應模型
+    id: int
     taxid: int
     name: str
     products: List[Product] = []
@@ -52,16 +55,18 @@ class Supplier(SupplierBase):
 # -----------------------------------------------------------------------------
 # 進貨單
 class PurchaseOrderBase(BaseModel):
+    product_id: int
     cost_price: int
     amount: int
     total_price: int
 
 class PurchaseOrderCreate(PurchaseOrderBase):
     supplier_taxid: int
-    product_id: int
+    product_pn: int
 
 class PurchaseOrder(PurchaseOrderBase):
     id: int
+    time: datetime
     supplier_taxid: int
     product_id: int
     cost_price: int
@@ -79,6 +84,7 @@ class CustomerCreate(CustomerBase):
     taxid: int
 
 class Customer(CustomerBase):
+    id: int
     taxid: int
     name: str
 
@@ -88,16 +94,18 @@ class Customer(CustomerBase):
 # -----------------------------------------------------------------------------
 # 出貨單
 class SellOrderaBase(BaseModel):
-    sell_price: int
-    amount: int
-    total_price: int
+    product_id: int
+    sell_price: int = 0
+    amount: int = 0
+    total_price: int = 0
 
 class SellOrderaCreate(SellOrderaBase):
     customer_taxid: int
-    product_id: int
+    product_pn: int
 
 class SellOrder(SellOrderaBase):
     id: int
+    time: datetime
     customer_taxid: int
     product_id: int
     sell_price: int
