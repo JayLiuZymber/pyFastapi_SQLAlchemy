@@ -90,16 +90,8 @@ def delete_supp(supplier_taxid: int, db: Session = Depends(get_db)):
     if not db_supp:
         raise HTTPException(status_code=404, detail="Supplier not found")
     return crud.db_delete_supp(db, supp_taxid=supplier_taxid)
-"""     try:
-        db.query(schemas.Supplier).filter_by(taxid=supplier_taxid).delete()
-        db.commit()
-    except Exception as e:
-        print(e.__class__.__name__)
-        print(str(e))
-    finally:
-        db.close()
-        return True """
 
+# 通過taxid查詢供應商
 @app.get("/supp/{supplier_taxid}", response_model=schemas.Supplier)
 def read_supp(supplier_taxid: int, db: Session = Depends(get_db)):
     db_supp = crud.db_get_supp(db, supp_taxid=supplier_taxid)
@@ -108,16 +100,16 @@ def read_supp(supplier_taxid: int, db: Session = Depends(get_db)):
     return db_supp
 
 # -----------------------------------------------------------------------------
+# 建立供應商的product
+@app.post("/supp/{supplier_taxid}/prod", response_model=schemas.Product)
+def create_supp_product(supplier_taxid: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    return crud.db_create_supp_product(db=db, prod=product, supp_taxid=supplier_taxid)
+
 # 讀取供應商擁有的product
 @app.get("/prods/", response_model=List[schemas.Product])
 def read_products(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
     products = crud.get_product(db=db, skip=skip, limit=limit)
     return products
-
-# 建立供應商的product
-@app.post("/supp/{supplier_taxid}/prod", response_model=schemas.Product)
-def create_supp_product(supplier_taxid: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
-    return crud.db_create_supp_product(db=db, prod=product, supp_taxid=supplier_taxid)
 
 # -----------------------------------------------------------------------------
 # 新建客戶
@@ -125,6 +117,7 @@ def create_supp_product(supplier_taxid: int, product: schemas.ProductCreate, db:
 def create_cust(customer: schemas.CustomerCreate, db: Session = Depends(get_db)):
     return crud.db_create_cust(db=db, cust=customer)
 
+# 刪除客戶
 @app.delete("/cust/{customer_taxid}", response_model=bool)
 def delete_cust(customer_taxid: int, db: Session = Depends(get_db)):
     db_cust = crud.db_get_cust(db, cust_taxid=customer_taxid)
@@ -132,6 +125,7 @@ def delete_cust(customer_taxid: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Customer not found")
     return crud.db_delete_cust(db, cust_taxid=customer_taxid)
 
+# 通過taxid查詢客戶
 @app.get("/cust/{customer_taxid}", response_model=schemas.Customer)
 def read_cust(customer_taxid: int, db: Session = Depends(get_db)):
     db_cust = crud.db_get_cust(db, cust_taxid=customer_taxid)
