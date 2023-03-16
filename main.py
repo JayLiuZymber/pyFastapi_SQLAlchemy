@@ -24,6 +24,13 @@ http://127.0.0.1:8000/supp/22099131
     "name": "台灣積體電路製造股份有限公司",
     "products": []
 }
+# 請求 Postman->PATCH = 請求
+{
+    "taxid": "22099131",
+    "name": "台灣積體電路製造股份有限公司II"
+}
+# 響應 Postman->DELETE
+true
 
 http://127.0.0.1:8000/supp/22099131/prod
 # 請求 POST
@@ -83,7 +90,7 @@ def read_root():
 def create_supp(supplier: schemas.SupplierCreate, db: Session = Depends(get_db)):
     return crud.db_create_supp(db=db, supp=supplier)
 
-# 刪除供應商
+# 刪除供應商 回傳bool
 @app.delete("/supp/{supplier_taxid}", response_model=bool)
 def delete_supp(supplier_taxid: int, db: Session = Depends(get_db)):
     db_supp = crud.db_get_supp(db, supp_taxid=supplier_taxid)
@@ -99,17 +106,27 @@ def read_supp(supplier_taxid: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Supplier not found")
     return db_supp
 
+# 修改供應商 回傳Supplier
+@app.patch("/supp/{supplier_taxid}", response_model=schemas.Supplier)
+# 輸入模型 SupplierCreate
+def update_supp(supplier_taxid: int, supplier: schemas.SupplierCreate, db: Session = Depends(get_db)):
+    db_supp = crud.db_get_supp(db, supp_taxid=supplier_taxid)
+    if not db_supp:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+    db_supp = crud.db_set_supp(db, supp_taxid=supplier_taxid, supp=supplier)
+    return db_supp
+
 # -----------------------------------------------------------------------------
 # 建立供應商的product
 @app.post("/supp/{supplier_taxid}/prod", response_model=schemas.Product)
 def create_supp_product(supplier_taxid: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
     return crud.db_create_supp_product(db=db, prod=product, supp_taxid=supplier_taxid)
 
-# 讀取供應商擁有的product
+# 讀取所有的product
 @app.get("/prods/", response_model=List[schemas.Product])
-def read_products(skip: int = 0, limit: int = 0, db: Session = Depends(get_db)):
-    products = crud.get_product(db=db, skip=skip, limit=limit)
-    return products
+def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    prods = crud.db_get_product(db=db, skip=skip, limit=limit)
+    return prods
 
 # -----------------------------------------------------------------------------
 # 新建客戶
@@ -131,6 +148,16 @@ def read_cust(customer_taxid: int, db: Session = Depends(get_db)):
     db_cust = crud.db_get_cust(db, cust_taxid=customer_taxid)
     if not db_cust:
         raise HTTPException(status_code=404, detail="Customer not found")
+    return db_cust
+
+# 修改客戶 回傳Customer
+@app.patch("/cust/{customer_taxid}", response_model=schemas.Customer)
+# 輸入模型 CustomerCreate
+def update_supp(customer_taxid: int, customer: schemas.CustomerCreate, db: Session = Depends(get_db)):
+    db_cust = crud.db_get_cust(db, cust_taxid=customer_taxid)
+    if not db_cust:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    db_cust = crud.db_set_cust(db, cust_taxid=customer_taxid, cust=customer)
     return db_cust
 
 # -----------------------------------------------------------------------------

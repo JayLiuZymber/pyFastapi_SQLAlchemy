@@ -29,11 +29,13 @@ def db_get_supp(db: Session, supp_taxid: int):
 
 # 修改供應商
 def db_set_supp(db: Session, supp_taxid: int, supp: schemas.Supplier):
-    res = db.query(models.Supplier).filter(models.Supplier.taxid == supp_taxid).update(models.Supplier.name == supp.name)
-    # db_supp = models.Supplier(  taxid = supp_taxid, name = supp.name)
+    db_supp = db.query(models.Supplier).filter(models.Supplier.taxid == supp_taxid).first()
+    db_supp.taxid = supp.taxid
+    db_supp.name = supp.name
+    db.add(db_supp)
     db.commit() # 提交儲存到資料庫中
-    # db.refresh(db_supp) # 重新整理
-    return res
+    db.refresh(db_supp) # 重新整理
+    return db_supp
 
 # -----------------------------------------------------------------------------
 # 新增進貨單
@@ -61,7 +63,7 @@ def db_create_supp_product(db: Session, prod: schemas.ProductCreate, supp_taxid:
     db.refresh(db_prod)
     return db_prod
 
-# 獲取供應商擁有的product
+# 獲取所有的product
 def db_get_product(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Product).offset(skip).limit(limit).all()
 
@@ -83,5 +85,15 @@ def db_delete_cust(db: Session, cust_taxid: int):
 # 通過taxid查詢客戶
 def db_get_cust(db: Session, cust_taxid: int):
     return db.query(models.Customer).filter(models.Customer.taxid == cust_taxid).first()
+
+# 修改客戶
+def db_set_cust(db: Session, cust_taxid: int, cust: schemas.Customer):
+    db_cust = db.query(models.Customer).filter(models.Customer.taxid == cust_taxid).first()
+    db_cust.taxid = cust.taxid
+    db_cust.name = cust.name
+    db.add(db_cust)
+    db.commit() # 提交儲存到資料庫中
+    db.refresh(db_cust) # 重新整理
+    return db_cust
 
 # -----------------------------------------------------------------------------
