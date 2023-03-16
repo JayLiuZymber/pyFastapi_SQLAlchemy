@@ -63,6 +63,15 @@ def db_create_supp_product(db: Session, prod: schemas.ProductCreate, supp_taxid:
     db.refresh(db_prod)
     return db_prod
 
+# 通過port_number查詢產品
+def db_get_supp_product(db: Session, port_number: int):
+    return db.query(models.Product).filter(models.Product.port_number == port_number).first()
+
+# 讀取供應商擁有的product
+def db_get_supp_all_product(supp_taxid: int, db: Session, skip: int = 0, limit: int = 100):
+    db_prod = db.query(models.Product).filter(models.Product.supplier_taxid == supp_taxid)
+    return db_prod.offset(skip).limit(limit).all()
+
 # 獲取所有的product
 def db_get_product(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Product).offset(skip).limit(limit).all()
