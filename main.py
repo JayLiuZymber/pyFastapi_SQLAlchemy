@@ -131,6 +131,14 @@ def update_supp(supplier_taxid: int, supplier: schemas.SupplierCreate, db: Sessi
 def create_supp_product(supplier_taxid: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
     return crud.db_create_supp_product(db=db, prod=product, supp_taxid=supplier_taxid)
 
+# 刪除產品 回傳bool
+@app.delete("/supp/{supplier_taxid}/prod/{port_number}", response_model=bool)
+def delete_supp_product(port_number: int, db: Session = Depends(get_db)):
+    db_prod = crud.db_get_supp_product(db, port_number=port_number)
+    if not db_prod:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return crud.db_delete_supp_product(db, port_number=port_number)
+
 # 通過port_number查詢產品
 @app.get("/supp/{supplier_taxid}/prod/{port_number}", response_model=schemas.Product)
 def get_supp_product(port_number: int, db: Session = Depends(get_db)):
@@ -145,7 +153,7 @@ def read_supp_products(supplier_taxid: int, skip: int = 0, limit: int = 100, db:
 # 讀取所有的product
 @app.get("/prods/", response_model=List[schemas.Product])
 def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    prods = crud.db_get_product(db=db, skip=skip, limit=limit)
+    prods = crud.db_get_all_product(db=db, skip=skip, limit=limit)
     return prods
 
 # -----------------------------------------------------------------------------
