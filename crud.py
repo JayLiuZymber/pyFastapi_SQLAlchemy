@@ -7,6 +7,10 @@
 
 from sqlalchemy.orm import Session
 import models, schemas
+import logs
+
+log = logs.getLogger(__name__, logs.DEBUG, True)
+# log.debug('xxx')
 
 # -----------------------------------------------------------------------------
 # 新建供應商

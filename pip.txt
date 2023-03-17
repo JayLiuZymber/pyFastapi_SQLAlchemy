@@ -1,0 +1,6 @@
+Setup
+> pip install -r requirements.txt
+Check
+> pip freeze
+Output
+> pip freeze > requirements.txt

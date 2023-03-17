@@ -71,10 +71,13 @@ import crud, schemas
 from database import SessionLocal, engine, Base
 from sqlalchemy.orm import Session
 import uvicorn
+import logs
 
 Base.metadata.create_all(bind=engine) #資料庫初始化，如果沒有庫或者表，會自動建立
 
 app = FastAPI()
+log = logs.getLogger(__name__, logs.DEBUG, True)
+log.info('log start')
 
 # Dependency
 def get_db():
@@ -91,6 +94,7 @@ def get_db():
 # 首頁
 @app.get("/")
 def read_root():
+    log.debug('')
     return {"歡迎使用": "進銷存管理系統"}
 
 # -----------------------------------------------------------------------------
