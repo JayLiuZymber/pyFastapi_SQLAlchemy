@@ -73,7 +73,9 @@ def db_get_supp_product(db: Session, port_number: int):
 
 # 刪除產品
 def db_delete_supp_product(db: Session, port_number: int):
-    return db.query(models.Product).filter(models.Product.port_number == port_number).delete()
+    res = db.query(models.Product).filter(models.Product.port_number == port_number).delete()
+    db.commit()
+    return res
 
 # 讀取供應商擁有的product
 def db_get_supp_all_product(supp_taxid: int, db: Session, skip: int = 0, limit: int = 100):
