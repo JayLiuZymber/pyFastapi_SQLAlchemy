@@ -55,22 +55,28 @@ class Supplier(SupplierBase):
 # -----------------------------------------------------------------------------
 # 進貨單
 class PurchaseOrderBase(BaseModel):
-    product_id: int
     cost_price: int
     amount: int
-    total_price: int
 
 class PurchaseOrderCreate(PurchaseOrderBase):
-    supplier_taxid: int
     product_pn: int
 
 class PurchaseOrder(PurchaseOrderBase):
     id: int
     time: datetime
+    time_id: float
+    order_id: int
+    
     supplier_taxid: int
+    supplier_name: str
+    
+    product_pn: int
     product_id: int
+    product_name: str
+    
     cost_price: int
     amount: int
+    total_price: int
 
     class Config:
         orm_mode = True

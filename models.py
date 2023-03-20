@@ -3,10 +3,21 @@
 資料庫模型表
 通過資料庫配置檔案中的基類來建立模型類
 複雜例項 在之前的基礎上再加一個模型類Item，User與之是一對多的關係
+
+SQL Data Types
+https://www.digitalocean.com/community/tutorials/sql-data-types
+Numeric data types such as: INT, TINYINT, BIGINT, FLOAT, REAL, etc.
+Date and Time data types such as: DATE, TIME, DATETIME, etc.
+Character and String data types such as: CHAR, VARCHAR, TEXT, etc.
+Unicode character string data types such as: NCHAR, NVARCHAR, NTEXT, etc.
+Binary data types such as: BINARY, VARBINARY, etc.
+Miscellaneous data types - CLOB, BLOB, XML, CURSOR, TABLE, etc.
 '''
 
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime, Double
+from sqlalchemy import BIGINT
+from sqlalchemy.orm import relationship, column_property
+from sqlalchemy import func
 from database import Base
 
 # 商品
@@ -36,18 +47,20 @@ class Supplier(Base):
 class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
     id = Column(Integer, primary_key=True, index=True)
+    time = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    time_id = column_property(func.date_format(time, '%Y%m%d.%H%i%s'))
+    order_id = Column(BIGINT, unique=True, index=True, default=func.date_format(time, '%Y%m%d%H%i%s'), nullable=False)
 
-    time = Column(DateTime, nullable=False)
     # supplier_taxid = Column(Integer, nullable=False)
     # supplier = Column(String(32), nullable=False)
     supplier_taxid = Column(Integer, ForeignKey("suppliers.taxid"), nullable=False)
-    supplier = Column(String(32), ForeignKey("suppliers.name"), nullable=False)
+    supplier_name = Column(String(32), ForeignKey("suppliers.name"), nullable=False)
 
     # product_taxid = Column(Integer, nullable=False)
     # product = Column(String(32), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), index=True, nullable=False)
     product_pn = Column(Integer, ForeignKey("products.port_number"), index=True, nullable=False)
-    product = Column(String(32), ForeignKey("products.name"), nullable=False)
+    product_name = Column(String(32), ForeignKey("products.name"), nullable=False)
 
     cost_price = Column(Integer, default=0, nullable=False)
     amount = Column(Integer, default=0, nullable=False)
@@ -67,7 +80,7 @@ class SellOrder(Base):
     __tablename__ = "sell_orders"
     id = Column(Integer, primary_key=True, index=True)
     
-    time = Column(DateTime, nullable=False)
+    time = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     # customer_taxid = Column(Integer, nullable=False)
     # customer = Column(String(32), nullable=False)
     customer_taxid = Column(Integer, ForeignKey("customers.taxid"), index=True, nullable=False)

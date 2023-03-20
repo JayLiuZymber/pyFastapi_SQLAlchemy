@@ -56,7 +56,7 @@ def getLogger(title: str, level: int = DEBUG, toFile: bool = False):
     fileformatter = formatter
     fileformatter: logging.Formatter = logging.Formatter( \
         '%(asctime)s'+ Fore.YELLOW +'%(levelname)s:(%(name)s)'+ Fore.RESET +' %(filename)s, line %(lineno)d | %(message)s')
-    fileHandler: logging.FileHandler = logging.FileHandler(filename='log.ansi', encoding='utf-8')
+    fileHandler: logging.FileHandler = logging.FileHandler(filename='log.ansi', encoding='utf-8', mode='w')
     fileHandler.setFormatter(fileformatter)
 
     if toStream:

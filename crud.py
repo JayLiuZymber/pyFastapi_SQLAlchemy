@@ -6,6 +6,8 @@
 '''
 
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
+from sqlalchemy import DateTime
 import models, schemas
 import logs
 
@@ -42,23 +44,6 @@ def db_set_supp(db: Session, supp_taxid: int, supp: schemas.Supplier):
     return db_supp
 
 # -----------------------------------------------------------------------------
-# 新增進貨單
-def db_create_supp_order(db: Session, order: schemas.PurchaseOrderCreate):
-    db_order = models.PurchaseOrder( supplier_taxid = order.supplier_taxid, \
-                                    product_pn = order.product_pn, \
-                                    cost_price = order.cost_price, \
-                                    amount = order.amount, \
-                                    total_price = order.cost_price * order.amount )
-    db.add(db_order)
-    db.commit() # 提交儲存到資料庫中
-    db.refresh(db_order) # 重新整理
-    return db_order
-
-# 通過id查詢進貨單
-def db_get_supp_order(db: Session, ord_id: int):
-    return db.query(models.PurchaseOrder).filter(models.Supplier.id == ord_id).first()
-
-# -----------------------------------------------------------------------------
 # 新建供應商的product
 def db_create_supp_product(db: Session, prod: schemas.ProductCreate, supp_taxid: int):
     db_prod = models.Product(**prod.dict(), supplier_taxid = supp_taxid)
@@ -85,6 +70,91 @@ def db_get_supp_all_product(supp_taxid: int, db: Session, skip: int = 0, limit: 
 # 獲取所有的product
 def db_get_all_product(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Product).offset(skip).limit(limit).all()
+
+# -----------------------------------------------------------------------------
+# 新增進貨單
+def db_create_supp_order(db: Session, order: schemas.PurchaseOrderCreate):
+    log.debug('')
+    db_prob = db_get_supp_product(db=db, port_number = order.product_pn)
+    db_supp = db_get_supp(db=db, supp_taxid = db_prob.supplier_taxid)
+    # db_time = DateTime(timezone=True, server_default=func.now())
+    db_order = models.PurchaseOrder( #order_id = db_time.strf,\
+                                    supplier_taxid = db_supp.taxid, \
+                                    supplier_name = db_supp.name, \
+                                    
+                                    product_id = db_prob.id, \
+                                    product_pn = db_prob.port_number, \
+                                    product_name = db_prob.name, \
+                                    
+                                    cost_price = order.cost_price, \
+                                    amount = order.amount, \
+                                    total_price = order.cost_price * order.amount )
+    db.add(db_order)
+    db.commit() # 提交儲存到資料庫中
+    db.refresh(db_order) # 重新整理
+    return db_order
+
+# 通過id刪除進貨單
+def db_delete_supp_order_by_id(db: Session, id: int):
+    res = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == id).delete()
+    db.commit()
+    return res
+
+# 通過id查詢進貨單
+def db_get_supp_order_by_id(db: Session, id: int):
+    return db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == id).first()
+
+# 通過id修改客戶
+def db_set_supp_order_by_id(db: Session, id: int, order: schemas.PurchaseOrder):
+    db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == id).first()
+    db_po.cost_price = order.cost_price
+    db_po.amount = order.amount
+    db_po.total_price = order.cost_price * order.amount
+    db_po.product_pn = order.product_pn
+
+    db_prob = db_get_supp_product(db=db, port_number = order.product_pn)
+    db_po.product_id = db_prob.id
+    db_po.product_pn = db_prob.port_number
+    db_po.product_name = db_prob.name
+    
+    db_supp = db_get_supp(db=db, supp_taxid = db_prob.supplier_taxid)
+    db_po.supplier_taxid = db_supp.taxid
+    db_po.supplier_name = db_supp.name
+    db.add(db_po)
+    db.commit() # 提交儲存到資料庫中
+    db.refresh(db_po) # 重新整理
+    return db_po
+
+# 通過order_id刪除進貨單
+def db_delete_supp_order(db: Session, order_id: int):
+    res = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.order_id == order_id).delete()
+    db.commit()
+    return res
+
+# 通過order_id查詢進貨單
+def db_get_supp_order(db: Session, order_id: int):
+    return db.query(models.PurchaseOrder).filter(models.PurchaseOrder.order_id == order_id).first()
+
+# 通過order_id修改客戶
+def db_set_supp_order(db: Session, order_id: int, order: schemas.PurchaseOrder):
+    db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.order_id == order_id).first()
+    db_po.cost_price = order.cost_price
+    db_po.amount = order.amount
+    db_po.total_price = order.cost_price * order.amount
+    db_po.product_pn = order.product_pn
+
+    db_prob = db_get_supp_product(db=db, port_number = order.product_pn)
+    db_po.product_id = db_prob.id
+    db_po.product_pn = db_prob.port_number
+    db_po.product_name = db_prob.name
+
+    db_supp = db_get_supp(db=db, supp_taxid = db_prob.supplier_taxid)
+    db_po.supplier_taxid = db_supp.taxid
+    db_po.supplier_name = db_supp.name
+    db.add(db_po)
+    db.commit() # 提交儲存到資料庫中
+    db.refresh(db_po) # 重新整理
+    return db_po
 
 # -----------------------------------------------------------------------------
 # 新建客戶
