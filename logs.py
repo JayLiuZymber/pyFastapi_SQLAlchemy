@@ -6,6 +6,13 @@ logs 快速設定版
 import logging
 from colorama import init, Fore, Back
 
+""" level
+CRITICAL	50	嚴重的錯誤，表明程序已不能繼執行
+ERROR	    40	由於嚴重問題，程序的某些功能已經不能正常運行
+WARNING	    30	表明有已經或即將發生的意外（例如：磁盤空間不足）。程序仍按預計進行
+INFO	    20	確認程序按預期進行
+DEBUG	    10	細節信息，僅當診斷問題時適用
+"""
 CRITICAL = logging.CRITICAL
 FATAL = CRITICAL
 ERROR = logging.ERROR
@@ -15,7 +22,7 @@ INFO = logging.INFO
 DEBUG = logging.DEBUG
 NOTSET = logging.NOTSET
 
-""" 
+""" logging.LogRecord 
 %(asctime)s	 日期時間, 格式為 YYYY-MM-DD HH:mm:SS,ms (毫秒)
 %(message)s	 使用者自訂訊息
 %(levelname)s	 日誌安全等級

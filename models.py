@@ -48,8 +48,8 @@ class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
     id = Column(Integer, primary_key=True, index=True)
     time = Column(DateTime(timezone=True), default=func.now(), nullable=False)
-    time_id = column_property(func.date_format(time, '%Y%m%d.%H%i%s'))
-    order_id = Column(BIGINT, unique=True, index=True, default=func.date_format(time, '%Y%m%d%H%i%s'), nullable=False)
+    time_id = column_property(func.date_format(time, '%Y%m%d.%H%i%s')) #=20230320.140218
+    order_id = Column(BIGINT, unique=True, index=True, default=func.date_format(time, '%Y%m%d%H%i%s'), nullable=False) #=20230320140218
 
     # supplier_taxid = Column(Integer, nullable=False)
     # supplier = Column(String(32), nullable=False)
