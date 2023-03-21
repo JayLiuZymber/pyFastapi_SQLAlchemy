@@ -26,12 +26,12 @@ class Product(Base):
     id = Column(Integer, primary_key=True, index=True)
     port_number = Column(Integer, unique=True, index=True, nullable=False)
     name = Column(String(32), unique=True, nullable=False)
-    supplier_taxid = Column(Integer, ForeignKey("suppliers.taxid"))
+    supplier_taxid = Column(Integer, ForeignKey("suppliers.taxid"), nullable=False)
     supplier = relationship("Supplier", back_populates="products")
 
     cost_price = Column(Integer, nullable=False)
     sell_price = Column(Integer, nullable=False)
-    amount = Column(Integer, default=0)
+    amount = Column(Integer, default=0, nullable=False)
 
 # 供應商
 class Supplier(Base):
@@ -40,9 +40,9 @@ class Supplier(Base):
     # 統一編號
     taxid = Column(Integer, unique=True, index=True, nullable=False, autoincrement=False)
     name = Column(String(32), unique=True, nullable=False)
-    
+
     products = relationship("Product", back_populates="supplier")
-    
+
 # 進貨單
 class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
@@ -64,7 +64,7 @@ class PurchaseOrder(Base):
 
     cost_price = Column(Integer, default=0, nullable=False)
     amount = Column(Integer, default=0, nullable=False)
-    total_price = Column(Integer, nullable=False)
+    total_price = Column(Integer, default=0, nullable=False)
 
 # -----------------------------------------------------------------------------
 # 客戶
@@ -79,21 +79,24 @@ class Customer(Base):
 class SellOrder(Base):
     __tablename__ = "sell_orders"
     id = Column(Integer, primary_key=True, index=True)
-    
-    time = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    time = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    time_id = column_property(func.date_format(time, '%Y%m%d.%H%i%s')) #=20230320.140218
+    order_id = Column(BIGINT, unique=True, index=True, default=func.date_format(time, '%Y%m%d%H%i%s'), nullable=False) #=20230320140218
+
     # customer_taxid = Column(Integer, nullable=False)
     # customer = Column(String(32), nullable=False)
     customer_taxid = Column(Integer, ForeignKey("customers.taxid"), index=True, nullable=False)
-    customer = Column(String(32), ForeignKey("customers.name"), nullable=False)
+    customer_name = Column(String(32), ForeignKey("customers.name"), nullable=False)
 
     # product_id = Column(Integer, nullable=False)
     # product = Column(String(32), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), index=True, nullable=False)
     product_pn = Column(Integer, ForeignKey("products.port_number"), index=True, nullable=False)
-    product = Column(String(32), ForeignKey("products.name"), nullable=False)
+    product_name = Column(String(32), ForeignKey("products.name"), nullable=False)
 
     sell_price = Column(Integer, default=0, nullable=False)
     amount = Column(Integer, default=0, nullable=False)
-    total_price = Column(Integer, nullable=False)
+    total_price = Column(Integer, default=0, nullable=False)
 
 # -----------------------------------------------------------------------------

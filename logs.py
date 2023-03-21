@@ -41,6 +41,7 @@ NOTSET = logging.NOTSET
 # -----------------------------------------------------------------------------
 init(autoreset=True) #colorama
 
+#e.g. log = logs.getLogger(__name__, logs.DEBUG, True)
 def getLogger(title: str, level: int = DEBUG, toFile: bool = False):
     toStream = True
 
@@ -52,8 +53,8 @@ def getLogger(title: str, level: int = DEBUG, toFile: bool = False):
         # Fore.MAGENTA + '%(levelname)s'+ Fore.RESET +':(%(name)s) %(filename)s line:%(lineno)d %(message)s')
         # Fore.MAGENTA + '%(levelname)s'+ Fore.RESET +':(%(name)s) \u001b]8;;%(filename)s\u001b\\%(filename)s\u001b]8;;\u001b\\ line:%(lineno)d %(message)s')
         # Fore.MAGENTA + '%(levelname)s'+ Fore.RESET +':(%(name)s) \x1b]8;;%(filename)s\a%(filename)s\x1b]8;;\a line:%(lineno)d %(message)s')
-        # Fore.YELLOW +'%(levelname)s:(%(name)s)'+ Fore.RESET +' %(filename)s, line %(lineno)d | %(message)s')
-        Fore.YELLOW +'%(levelname)s:(%(name)s)'+ Fore.RESET +' %(funcName)s | %(message)s')
+        Fore.YELLOW +'%(levelname)s:(%(name)s)'+ Fore.RESET +' %(filename)s, line %(lineno)d | %(message)s')
+        # Fore.YELLOW +'%(levelname)s:(%(name)s)'+ Fore.RESET +' %(funcName)s | %(message)s')
     # print(f"\u001b]8;;{target}\u001b\\{text}\u001b]8;;\u001b\\")
     # print(f"\x1b]8;;{target}\a{text}\x1b]8;;\a")
     # File "{file_path}", line {line_number}

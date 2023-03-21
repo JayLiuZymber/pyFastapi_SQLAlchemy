@@ -99,23 +99,30 @@ class Customer(CustomerBase):
 
 # -----------------------------------------------------------------------------
 # 出貨單
-class SellOrderaBase(BaseModel):
-    product_id: int
-    sell_price: int = 0
-    amount: int = 0
-    total_price: int = 0
+class SellOrderBase(BaseModel):
+    sell_price: int
+    amount: int
 
-class SellOrderaCreate(SellOrderaBase):
+class SellOrderCreate(SellOrderBase):
     customer_taxid: int
     product_pn: int
 
-class SellOrder(SellOrderaBase):
+class SellOrder(SellOrderBase):
     id: int
     time: datetime
+    time_id: float
+    order_id: int
+
     customer_taxid: int
+    customer_name: str
+    
+    product_pn: int
     product_id: int
+    product_name: str
+
     sell_price: int
     amount: int
+    total_price: int
 
     class Config:
         orm_mode = True
