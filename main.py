@@ -2,99 +2,11 @@
 '''
 主檔案
 主檔案進行資料庫初始化、FastAPI例項建立以及處理各種請求
-進入到互動文件檢視：
-http://127.0.0.1:8000/supps/
-http://127.0.0.1:8000/docs->POST Request body
-# 請求 Postman->POST body raw JSON->SEND
-{
-    "taxid": "22099131",
-    "name": "台灣積體電路製造股份有限公司"
-}
-# 響應
-{
-    "taxid": 22099131,
-    "name": "台灣積體電路製造股份有限公司",
-    "products": []
-}
-
-http://127.0.0.1:8000/supp/22099131
-# 響應 Postman->GET
-{
-    "taxid": 22099131,
-    "name": "台灣積體電路製造股份有限公司",
-    "products": []
-}
-# 請求 Postman->PATCH = 請求
-{
-    "taxid": "22099131",
-    "name": "台灣積體電路製造股份有限公司II"
-}
-# 響應 Postman->DELETE
-true
-
-http://127.0.0.1:8000/supp/22099131/prod
-# 請求 POST
-{
-  "port_number": "1001001",
-  "name": "Wifi IC"
-}
-# 響應
-{
-    "id": 1,
-    "supplier_taxid": 22099131,
-    "port_number": 1001001,
-    "name": "Wifi IC"
-}
-
-http://127.0.0.1:8000/supp/22099131/prod/1001001
-# 響應 GET
-{
-    "id": 1,
-    "supplier_taxid": 22099131,
-    "port_number": 1001001,
-    "name": "Wifi IC"
-}
-
-http://127.0.0.1:8000/pos
-# 請求 POST
-{
-    "product_pn": 1001001,
-    "cost_price": 200,
-    "amount": 33
-}
-# 響應
-{
-    "cost_price": 200,
-    "amount": 33,
-    "id": 3,
-    "time": "2023-03-20T11:22:29",
-    "order_id": 20230311.2229,
-    "supplier_taxid": 22099131,
-    "supplier_name": "台灣積體電路製造股份有限公司",
-    "product_pn": 1001001,
-    "product_id": 3,
-    "product_name": "Wifi IC",
-    "total_price": 6600
-}
-# 請求 Postman->PATCH = 請求
-{
-    "product_pn": 1001001,
-    "cost_price": 300,
-    "amount": 44
-}
-
-http://127.0.0.1:8000/custs/
-# 請求 POST = 響應
-{
-    "taxid": "00000022",
-    "name": "泰煜建材股份有限公司"
-}
-
 當啟動專案後，會生成新的Item資料表，以及與User表之間建立關係
 '''
 
 from typing import List
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 import crud, schemas
 from database import SessionLocal, engine, Base
 from sqlalchemy.orm import Session
@@ -128,16 +40,22 @@ def get_root():
 # -----------------------------------------------------------------------------
 # 新建供應商
 @app.post("/supps/", response_model=schemas.Supplier)
-def create_supp(supplier: schemas.SupplierCreate, db: Session = Depends(get_db)):
-    if exist_supp(supplier.taxid, db):
-        raise HTTPException(status_code=404, detail="Tax ID exist")
+async def create_supp(supplier: schemas.SupplierCreate, request: Request, db: Session = Depends(get_db)):
+    log.debug('')
+    raw_head = request.headers['Content-Type']
+    log.debug('%s', raw_head)
+    if raw_head != 'application/json':
+        raise HTTPException(422, detail="Content-Type is not json")
+    num = crud.count_supp(db, supplier.taxid)
+    if num != 0:
+        raise HTTPException(422, detail="Tax ID exist")
     return crud.create_supp(db, supplier)
 
 def exist_supp(supplier_taxid: int, db: Session = Depends(get_db)):
     num = crud.count_supp(db, supplier_taxid)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(status_code=404, detail="Supplier not found")
+        raise HTTPException(404, detail="Supplier not found")
     else:
         return True
 
@@ -165,15 +83,16 @@ def delete_supp(supplier_taxid: int, db: Session = Depends(get_db)):
 @app.post("/supp/{supplier_taxid}/prod", response_model=schemas.Product)
 def create_supp_product(supplier_taxid: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
     exist_supp(supplier_taxid, db)
-    if exist_supp_product(product.port_number, db):
-        raise HTTPException(status_code=404, detail="Port Number exist")
+    num = crud.count_supp_product(db, product.port_number)
+    if num != 0:
+        raise HTTPException(422, detail="Port Number exist")
     return crud.create_supp_product(db, supplier_taxid, product)
 
 def exist_supp_product(port_number: int, db: Session = Depends(get_db)):
     num = crud.count_supp_product(db, port_number)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(404, detail="Product not found")
     else:
         return True
 
@@ -208,7 +127,7 @@ def create_supp_order(purchase_order: schemas.PurchaseOrderCreate, db: Session =
     log.debug('')
     db_prod = crud.read_supp_product(db, port_number=purchase_order.product_pn)
     if not db_prod:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(404, detail="Product not found")
     exist_supp(db_prod.supplier_taxid, db)
     return crud.create_supp_order(db, order=purchase_order)
 
@@ -216,7 +135,7 @@ def exist_supp_order(order_id: int, db: Session = Depends(get_db)):
     num = crud.count_supp_order(order_id, db)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
+        raise HTTPException(404, detail="Purchase Order not found")
     else:
         return True
 
@@ -224,7 +143,7 @@ def exist_supp_order_by_id(id: int, db: Session = Depends(get_db)):
     num = crud.count_supp_order_by_id(db, id=id)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(status_code=404, detail="Purchase Order ID not found")
+        raise HTTPException(404, detail="Purchase Order ID not found")
     else:
         return True
 
@@ -274,15 +193,16 @@ def delete_supp_order(order_id: int, db: Session = Depends(get_db)):
 # 新建客戶
 @app.post("/custs/", response_model=schemas.Customer)
 def create_cust(customer: schemas.CustomerCreate, db: Session = Depends(get_db)):
-    if exist_cust(customer.taxid, db):
-        raise HTTPException(status_code=404, detail="Tax ID exist")
+    num = crud.count_cust(db, customer.taxid)
+    if num != 0:
+        raise HTTPException(422, detail="Tax ID exist")
     return crud.create_cust(db, cust=customer)
 
 def exist_cust(customer_taxid: int, db: Session = Depends(get_db)):
-    num = crud.count_cust(db, cust_taxid=customer_taxid)
+    num = crud.count_cust(db, customer_taxid)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(status_code=404, detail="Customer not found")
+        raise HTTPException(404, detail="Customer not found")
     else:
         return True
 
@@ -317,13 +237,13 @@ def create_cust_order(purchase_order: schemas.SellOrderCreate, db: Session = Dep
         return crud.create_cust_order(db, order=purchase_order)
     except Exception as e:
         log.error(e)
-        raise HTTPException(status_code=404, detail="Create Sell Order error")
+        raise HTTPException(422, detail="Create Sell Order error")
 
 def exist_cust_order(order_id: int, db: Session = Depends(get_db)):
     num = crud.count_cust_order(order_id, db)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(status_code=404, detail="Sell Order not found")
+        raise HTTPException(404, detail="Sell Order not found")
     else:
         return True
 
@@ -331,7 +251,7 @@ def exist_cust_order_by_id(id: int, db: Session = Depends(get_db)):
     num = crud.count_cust_order_by_id(db, id)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(status_code=404, detail="Sell Order ID not found")
+        raise HTTPException(404, detail="Sell Order ID not found")
     else:
         return True
 
@@ -353,7 +273,7 @@ def update_cust_by_id(id: int, order: schemas.SellOrderCreate, db: Session = Dep
         return crud.update_cust_order_by_id(db, id, order)
     except Exception as e:
         log.error(e)
-        raise HTTPException(status_code=404, detail="Update Sell Order error")
+        raise HTTPException(422, detail="Update Sell Order error")
 
 # 通過id刪除出貨單
 @app.delete("/so_id/{id}", response_model=bool)
@@ -379,7 +299,7 @@ def update_supp(order_id: int, order: schemas.SellOrderCreate, db: Session = Dep
         return crud.update_cust_order(db, order_id, order)
     except Exception as e:
         log.error(e)
-        raise HTTPException(status_code=404, detail="Update Sell Order error")
+        raise HTTPException(422, detail="Update Sell Order error")
 
 # 通過order_id刪除出貨單
 @app.delete("/so/{order_id}", response_model=bool)
