@@ -62,14 +62,24 @@ def count_supp_product(db: Session, port_number: int):
 def read_supp_product(db: Session, port_number: int):
     return db.query(models.Product).filter(models.Product.port_number == port_number).first()
 
-# 讀取供應商擁有的product
+# 讀取供應商擁有的產品
 def read_supp_all_product(db: Session, supp_taxid: int, skip: int = 0, limit: int = 100):
     db_prod = db.query(models.Product).filter(models.Product.supplier_taxid == supp_taxid)
     return db_prod.offset(skip).limit(limit).all()
 
-# 獲取所有的product
+# 獲取所有的產品
 def read_all_product(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Product).offset(skip).limit(limit).all()
+
+# 修改產品
+def update_supp_product(db: Session, port_number: int, prod: schemas.ProductCreate):
+    db_prod = db.query(models.Product).filter(models.Product.port_number == port_number).first()
+    db_prod.port_number = prod.port_number
+    db_prod.name = prod.name
+    db.add(db_prod)
+    db.commit() # 提交儲存到資料庫中
+    db.refresh(db_prod) # 重新整理
+    return db_prod
 
 # 刪除產品
 def delete_supp_product(db: Session, port_number: int):

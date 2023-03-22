@@ -40,26 +40,30 @@ def get_root():
 # -----------------------------------------------------------------------------
 # 新建供應商
 @app.post("/supps/", response_model=schemas.Supplier)
-async def create_supp(supplier: schemas.SupplierCreate, request: Request, db: Session = Depends(get_db)):
+def create_supp(supplier: schemas.SupplierCreate, request: Request, db: Session = Depends(get_db)):
     log.debug('')
-    raw_head = request.headers['Content-Type']
+    """ raw_head = request.headers['Content-Type']
     log.debug('%s', raw_head)
     if raw_head != 'application/json':
-        raise HTTPException(422, detail="Content-Type is not json")
+        raise HTTPException(422, "Content-Type is not json") """
+    if supplier.name == '':
+        raise HTTPException(422, "Name can not be null")
+    if supplier.taxid <= 0:
+        raise HTTPException(422, "Tax-ID is not valid")
     num = crud.count_supp(db, supplier.taxid)
     if num != 0:
-        raise HTTPException(422, detail="Tax ID exist")
+        raise HTTPException(422, "Tax-ID exist")
     return crud.create_supp(db, supplier)
 
 def exist_supp(supplier_taxid: int, db: Session = Depends(get_db)):
     num = crud.count_supp(db, supplier_taxid)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(404, detail="Supplier not found")
+        raise HTTPException(404, "Supplier not found")
     else:
         return True
 
-# 通過taxid查詢供應商
+# 通過taxid查詢供應商-ID
 @app.get("/supp/{supplier_taxid}", response_model=schemas.Supplier)
 def get_supp(supplier_taxid: int, db: Session = Depends(get_db)):
     exist_supp(supplier_taxid, db)
@@ -69,6 +73,10 @@ def get_supp(supplier_taxid: int, db: Session = Depends(get_db)):
 @app.patch("/supp/{supplier_taxid}", response_model=schemas.Supplier)
 # 輸入模型 SupplierCreate
 def update_supp(supplier_taxid: int, supplier: schemas.SupplierCreate, db: Session = Depends(get_db)):
+    if supplier.name == '':
+        raise HTTPException(422, "Name can not be null")
+    if supplier.taxid <= 0:
+        raise HTTPException(422, "Tax-ID is not valid")
     exist_supp(supplier_taxid, db)
     return crud.update_supp(db, supplier_taxid, supplier)
 
@@ -83,27 +91,33 @@ def delete_supp(supplier_taxid: int, db: Session = Depends(get_db)):
 @app.post("/supp/{supplier_taxid}/prod", response_model=schemas.Product)
 def create_supp_product(supplier_taxid: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
     exist_supp(supplier_taxid, db)
+    if product.port_number == '':
+        raise HTTPException(422, "Port-Number can not be null")
+    if product.amount <= 0:
+        raise HTTPException(422, "Amount is not valid")
     num = crud.count_supp_product(db, product.port_number)
     if num != 0:
-        raise HTTPException(422, detail="Port Number exist")
+        raise HTTPException(422, "Port-Number exist")
     return crud.create_supp_product(db, supplier_taxid, product)
 
 def exist_supp_product(port_number: int, db: Session = Depends(get_db)):
     num = crud.count_supp_product(db, port_number)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(404, detail="Product not found")
+        raise HTTPException(404, "Product not found")
     else:
         return True
 
 # 通過port_number查詢產品
 @app.get("/supp/{supplier_taxid}/prod/{port_number}", response_model=schemas.Product)
+@app.get("/prods/{port_number}", response_model=schemas.Product)
 def get_supp_product(port_number: int, db: Session = Depends(get_db)):
     exist_supp_product(port_number, db)
     return crud.read_supp_product(db, port_number)
 
 # 刪除產品 回傳bool
 @app.delete("/supp/{supplier_taxid}/prod/{port_number}", response_model=bool)
+@app.delete("/prods/{port_number}", response_model=bool)
 def delete_supp_product(port_number: int, db: Session = Depends(get_db)):
     exist_supp_product(port_number, db)
     return crud.delete_supp_product(db, port_number)
@@ -114,28 +128,41 @@ def get_supp_products(supplier_taxid: int, skip: int = 0, limit: int = 100, db: 
     exist_supp(supplier_taxid, db)
     return crud.read_supp_all_product(db, skip=skip, limit=limit, supp_taxid=supplier_taxid)
 
-# 讀取所有的product
+# 讀取所有的產品
 @app.get("/prods/", response_model=List[schemas.Product])
 def get_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.read_all_product(db, skip=skip, limit=limit)
+
+# 修改產品
+@app.patch("/supp/{supplier_taxid}/prod/{port_number}", response_model=schemas.Product)
+@app.patch("/prods/{port_number}", response_model=schemas.Product)
+def update_supp_product(port_number: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    exist_supp_product(port_number, db)
+    if product.port_number == '':
+        raise HTTPException(422, "Port-Number can not be null")
+    if product.amount <= 0:
+        raise HTTPException(422, "Amount is not valid")
+    return crud.update_supp_product(db, port_number, product)
 
 # -----------------------------------------------------------------------------
 # 建立進貨單
 @app.post("/pos/", response_model=schemas.PurchaseOrder)
 # 輸入模型 PurchaseOrderCreate
-def create_supp_order(purchase_order: schemas.PurchaseOrderCreate, db: Session = Depends(get_db)):
+def create_supp_order(order: schemas.PurchaseOrderCreate, db: Session = Depends(get_db)):
     log.debug('')
-    db_prod = crud.read_supp_product(db, port_number=purchase_order.product_pn)
+    db_prod = crud.read_supp_product(db, port_number=order.product_pn)
     if not db_prod:
-        raise HTTPException(404, detail="Product not found")
+        raise HTTPException(404, "Product not found")
+    if order.cost_price < 0:
+        raise HTTPException(422, "Price is not valid")
     exist_supp(db_prod.supplier_taxid, db)
-    return crud.create_supp_order(db, order=purchase_order)
+    return crud.create_supp_order(db, order=order)
 
 def exist_supp_order(order_id: int, db: Session = Depends(get_db)):
     num = crud.count_supp_order(order_id, db)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(404, detail="Purchase Order not found")
+        raise HTTPException(404, "Purchase Order not found")
     else:
         return True
 
@@ -143,7 +170,7 @@ def exist_supp_order_by_id(id: int, db: Session = Depends(get_db)):
     num = crud.count_supp_order_by_id(db, id=id)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(404, detail="Purchase Order ID not found")
+        raise HTTPException(404, "Purchase Order ID not found")
     else:
         return True
 
@@ -160,6 +187,8 @@ def get_supp_order_by_id(id: int, db: Session = Depends(get_db)):
 def update_supp_by_id(id: int, order: schemas.PurchaseOrderCreate, db: Session = Depends(get_db)):
     exist_supp_order_by_id(id, db)
     exist_supp_product(order.product_pn, db)
+    if order.cost_price < 0:
+        raise HTTPException(422, "Price is not valid")
     return crud.update_supp_order_by_id(db, id, order)
 
 # 通過id刪除進貨單
@@ -179,6 +208,8 @@ def get_supp_order(order_id: int, db: Session = Depends(get_db)):
 @app.patch("/po/{order_id}", response_model=schemas.PurchaseOrder)
 # 輸入模型 PurchaseOrderCreate
 def update_supp(order_id: int, order: schemas.PurchaseOrderCreate, db: Session = Depends(get_db)):
+    if order.cost_price < 0:
+        raise HTTPException(422, "Price is not valid")
     exist_supp_order(order_id, db)
     exist_supp_product(order.product_pn, db)
     return crud.update_supp_order(db, order_id, order)
@@ -193,16 +224,20 @@ def delete_supp_order(order_id: int, db: Session = Depends(get_db)):
 # 新建客戶
 @app.post("/custs/", response_model=schemas.Customer)
 def create_cust(customer: schemas.CustomerCreate, db: Session = Depends(get_db)):
+    if customer.name == '':
+        raise HTTPException(422, "Name is null")
+    if customer.taxid <= 0:
+        raise HTTPException(422, "Tax-ID is not a valid")
     num = crud.count_cust(db, customer.taxid)
     if num != 0:
-        raise HTTPException(422, detail="Tax ID exist")
+        raise HTTPException(422, "Tax-ID exist")
     return crud.create_cust(db, cust=customer)
 
 def exist_cust(customer_taxid: int, db: Session = Depends(get_db)):
     num = crud.count_cust(db, customer_taxid)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(404, detail="Customer not found")
+        raise HTTPException(404, "Customer not found")
     else:
         return True
 
@@ -216,6 +251,10 @@ def get_cust(customer_taxid: int, db: Session = Depends(get_db)):
 @app.patch("/cust/{customer_taxid}", response_model=schemas.Customer)
 # 輸入模型 CustomerCreate
 def update_supp(customer_taxid: int, customer: schemas.CustomerCreate, db: Session = Depends(get_db)):
+    if customer.name == '':
+        raise HTTPException(422, "Name is null")
+    if customer.taxid <= 0:
+        raise HTTPException(422, "Tax-ID is not a valid")
     exist_cust(customer_taxid, db)
     return crud.update_cust(db, cust_taxid=customer_taxid, cust=customer)
 
@@ -229,21 +268,27 @@ def delete_cust(customer_taxid: int, db: Session = Depends(get_db)):
 # 建立出貨單
 @app.post("/sos/", response_model=schemas.SellOrder)
 # 輸入模型 SellOrderCreate
-def create_cust_order(purchase_order: schemas.SellOrderCreate, db: Session = Depends(get_db)):
+def create_cust_order(order: schemas.SellOrderCreate, db: Session = Depends(get_db)):
     log.debug('')
-    exist_supp_product(purchase_order.product_pn, db)
-    exist_cust(purchase_order.customer_taxid, db)
+    if order.product_pn == '':
+        raise HTTPException(422, "Product Port-Number can not be null")
+    if order.sell_price < 0:
+        raise HTTPException(422, "Price is not valid")
+    if order.amount <= 0:
+        raise HTTPException(422, "Amount is not valid")
+    exist_supp_product(order.product_pn, db)
+    exist_cust(order.customer_taxid, db)
     try:
-        return crud.create_cust_order(db, order=purchase_order)
+        return crud.create_cust_order(db, order=order)
     except Exception as e:
         log.error(e)
-        raise HTTPException(422, detail="Create Sell Order error")
+        raise HTTPException(422, "Create Sell Order error")
 
 def exist_cust_order(order_id: int, db: Session = Depends(get_db)):
     num = crud.count_cust_order(order_id, db)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(404, detail="Sell Order not found")
+        raise HTTPException(404, "Sell Order not found")
     else:
         return True
 
@@ -251,7 +296,7 @@ def exist_cust_order_by_id(id: int, db: Session = Depends(get_db)):
     num = crud.count_cust_order_by_id(db, id)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(404, detail="Sell Order ID not found")
+        raise HTTPException(404, "Sell Order ID not found")
     else:
         return True
 
@@ -266,6 +311,12 @@ def get_cust_order_by_id(id: int, db: Session = Depends(get_db)):
 @app.patch("/so_id/{id}", response_model=schemas.SellOrder)
 # 輸入模型 SellOrderCreate
 def update_cust_by_id(id: int, order: schemas.SellOrderCreate, db: Session = Depends(get_db)):
+    if order.product_pn == '':
+        raise HTTPException(422, "Product Port-Number can not be null")
+    if order.sell_price < 0:
+        raise HTTPException(422, "Price is not valid")
+    if order.amount <= 0:
+        raise HTTPException(422, "Amount is not valid")
     exist_cust_order_by_id(id, db)
     exist_supp_product(order.product_pn, db)
     exist_cust(order.customer_taxid, db)
@@ -273,7 +324,7 @@ def update_cust_by_id(id: int, order: schemas.SellOrderCreate, db: Session = Dep
         return crud.update_cust_order_by_id(db, id, order)
     except Exception as e:
         log.error(e)
-        raise HTTPException(422, detail="Update Sell Order error")
+        raise HTTPException(422, "Update Sell Order error")
 
 # 通過id刪除出貨單
 @app.delete("/so_id/{id}", response_model=bool)
@@ -292,6 +343,12 @@ def get_cust_order(order_id: int, db: Session = Depends(get_db)):
 @app.patch("/so/{order_id}", response_model=schemas.SellOrder)
 # 輸入模型 SellOrderCreate
 def update_supp(order_id: int, order: schemas.SellOrderCreate, db: Session = Depends(get_db)):
+    if order.product_pn == '':
+        raise HTTPException(422, "Product Port-Number can not be null")
+    if order.sell_price < 0:
+        raise HTTPException(422, "Price is not valid")
+    if order.amount <= 0:
+        raise HTTPException(422, "Amount is not valid")
     exist_cust_order(order_id, db)
     exist_supp_product(order.product_pn, db)
     exist_cust(order.customer_taxid, db)
@@ -299,7 +356,7 @@ def update_supp(order_id: int, order: schemas.SellOrderCreate, db: Session = Dep
         return crud.update_cust_order(db, order_id, order)
     except Exception as e:
         log.error(e)
-        raise HTTPException(422, detail="Update Sell Order error")
+        raise HTTPException(422, "Update Sell Order error")
 
 # 通過order_id刪除出貨單
 @app.delete("/so/{order_id}", response_model=bool)

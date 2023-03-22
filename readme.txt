@@ -85,3 +85,21 @@ http://127.0.0.1:8000/custs/
     "taxid": "00000022",
     "name": "泰煜建材股份有限公司"
 }
+
+# 請求 POST body raw "Text"->SEND
+{
+    "taxid": "00000022",
+    "name": "泰煜建材股份有限公司"
+}
+# 響應 body格式錯誤
+{
+    "detail": [
+        {
+            "loc": [
+                "body"
+            ],
+            "msg": "value is not a valid dict",
+            "type": "type_error.dict"
+        }
+    ]
+}

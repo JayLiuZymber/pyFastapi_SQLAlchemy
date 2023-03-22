@@ -20,13 +20,13 @@ from sqlalchemy.orm import relationship, column_property
 from sqlalchemy import func
 from database import Base
 
-# 商品
+# 產品
 class Product(Base):
     __tablename__ = "products" #"goods"
     id = Column(Integer, primary_key=True, index=True)
     port_number = Column(Integer, unique=True, index=True, nullable=False)
     name = Column(String(32), unique=True, nullable=False)
-    supplier_taxid = Column(Integer, ForeignKey("suppliers.taxid"), nullable=False)
+    supplier_taxid = Column(Integer, ForeignKey("suppliers.taxid", onupdate="CASCADE"), nullable=False)
     supplier = relationship("Supplier", back_populates="products")
 
     cost_price = Column(Integer, nullable=False)
@@ -53,14 +53,14 @@ class PurchaseOrder(Base):
 
     # supplier_taxid = Column(Integer, nullable=False)
     # supplier = Column(String(32), nullable=False)
-    supplier_taxid = Column(Integer, ForeignKey("suppliers.taxid"), nullable=False)
-    supplier_name = Column(String(32), ForeignKey("suppliers.name"), nullable=False)
+    supplier_taxid = Column(Integer, ForeignKey("suppliers.taxid", onupdate="CASCADE"), nullable=False)
+    supplier_name = Column(String(32), ForeignKey("suppliers.name", onupdate="CASCADE"), nullable=False)
 
     # product_taxid = Column(Integer, nullable=False)
     # product = Column(String(32), nullable=False)
-    product_id = Column(Integer, ForeignKey("products.id"), index=True, nullable=False)
-    product_pn = Column(Integer, ForeignKey("products.port_number"), index=True, nullable=False)
-    product_name = Column(String(32), ForeignKey("products.name"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id", onupdate="CASCADE"), index=True, nullable=False)
+    product_pn = Column(Integer, ForeignKey("products.port_number", onupdate="CASCADE"), index=True, nullable=False)
+    product_name = Column(String(32), ForeignKey("products.name", onupdate="CASCADE"), nullable=False)
 
     cost_price = Column(Integer, default=0, nullable=False)
     amount = Column(Integer, default=0, nullable=False)
