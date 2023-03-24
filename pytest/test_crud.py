@@ -1,4 +1,4 @@
-# test_xxx.py
+# test_*.py or *_test.py
 
 from crud import * # function
 from models import * # class

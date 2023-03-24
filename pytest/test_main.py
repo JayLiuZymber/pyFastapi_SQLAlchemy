@@ -1,4 +1,4 @@
-# test_xxx.py
+# test_*.py or *_test.py
 
 from main import * # function
 from models import * # class
@@ -37,6 +37,15 @@ def test_supp_3(sqlite_session: Session):
     assert (result.name == name)
     assert (result.taxid == taxid)
     assert (result.id != None)
+
+@pytest.mark.skip()
+def test_skip():
+    assert 1 + 1 == 3
+
+import sys
+@pytest.mark.skipif(condition=sys.platform == "win32", reason="測試跳過指定條件範例")
+def test_skip_test_case_by_condition():
+    assert 1 + 1 == 4
 
 # -----------------------------------------------------------------------------
 # 查詢DB執行SQL之前要先被阻擋 所以不用傳sqlite_session
