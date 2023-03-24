@@ -93,7 +93,7 @@ def create_supp_product(supplier_taxid: int, product: schemas.ProductCreate, db:
     exist_supp(supplier_taxid, db)
     if product.port_number == '':
         raise HTTPException(422, "Port-Number can not be null")
-    if product.amount <= 0:
+    if product.amount < 0:
         raise HTTPException(422, "Amount is not valid")
     num = crud.count_supp_product(db, product.port_number)
     if num != 0:

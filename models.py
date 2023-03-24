@@ -29,9 +29,12 @@ class Product(Base):
     supplier_taxid = Column(Integer, ForeignKey("suppliers.taxid", onupdate="CASCADE"), nullable=False)
     supplier = relationship("Supplier", back_populates="products")
 
+    #成本價=進貨價
     cost_price = Column(Integer, nullable=False)
-    sell_price = Column(Integer, nullable=False)
     amount = Column(Integer, default=0, nullable=False)
+    sell_price = Column(Integer, nullable=False)
+    #售出數
+    sell_amount = Column(Integer, default=0, nullable=False)
 
 # 供應商
 class Supplier(Base):

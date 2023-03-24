@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi import Request
 import schemas
 import pytest
+import random, string
 
 use_fixtures = [sqlite_session_fixture]
 
@@ -83,3 +84,16 @@ def test_supp_taxid_exist(sqlite_session: Session):
         create_supp(schemas.SupplierCreate(name=name, taxid=taxid), Request, sqlite_session)
     assert isinstance(exc.value, HTTPException)
     assert exc.value.status_code == 422
+
+# -----------------------------------------------------------------------------
+
+def test_supp_x(sqlite_session: Session):
+    # 大小寫字母
+    name = ''.join(random.choice(string.ascii_letters) for x in range(10))
+    taxid = random.randint(1, 99999999)
+    input = schemas.SupplierCreate(name=name, taxid=taxid)
+    result: Supplier = create_supp(input, Request, sqlite_session)
+    assert (result.name == name)
+    assert (result.taxid == taxid)
+    assert (result.id != None)
+   

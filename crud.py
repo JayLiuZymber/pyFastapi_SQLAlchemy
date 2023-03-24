@@ -91,21 +91,31 @@ def delete_supp_product(db: Session, port_number: int):
 # 新增進貨單
 def create_supp_order(db: Session, order: schemas.PurchaseOrderCreate):
     log.debug('')
-    db_prob = read_supp_product(db=db, port_number = order.product_pn)
-    db_supp = read_supp(db=db, supp_taxid = db_prob.supplier_taxid)
+    db_prod = read_supp_product(db=db, port_number = order.product_pn)
+    db.add(db_prod)
+    db_supp = read_supp(db=db, supp_taxid = db_prod.supplier_taxid)
     # db_time = DateTime(timezone=True, server_default=func.now())
     db_order = models.PurchaseOrder( #order_id = db_time.strf,\
                                     supplier_taxid = db_supp.taxid, \
                                     supplier_name = db_supp.name, \
 
-                                    product_id = db_prob.id, \
-                                    product_pn = db_prob.port_number, \
-                                    product_name = db_prob.name, \
+                                    product_id = db_prod.id, \
+                                    product_pn = db_prod.port_number, \
+                                    product_name = db_prod.name, \
 
                                     cost_price = order.cost_price, \
                                     amount = order.amount, \
                                     total_price = order.cost_price * order.amount )
     db.add(db_order)
+    log.debug('db\t$%d x %d', db_prod.cost_price, db_prod.amount)
+    log.debug('order\t$%d x %d', order.cost_price, order.amount)
+    if (db_prod.cost_price==0) & (db_prod.amount==0): #init
+        db_prod.cost_price = order.cost_price
+    else:
+        db_prod.cost_price = \
+            ((db_prod.cost_price * db_prod.amount) + (order.cost_price * order.amount))//(db_prod.amount + order.amount)
+    db_prod.amount += order.amount
+    log.debug('result\t$%d x %d', db_prod.cost_price, db_prod.amount)
     db.commit() # 提交儲存到資料庫中
     db.refresh(db_order) # 重新整理
     return db_order
@@ -117,7 +127,7 @@ def count_supp_order_by_id(db: Session, id: int):
 def read_supp_order_by_id(db: Session, id: int):
     return db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == id).first()
 
-# 通過id修改客戶
+# 通過id修改進貨單
 def update_supp_order_by_id(db: Session, id: int, order: schemas.PurchaseOrder):
     db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == id).first()
     db_po.cost_price = order.cost_price
@@ -125,12 +135,15 @@ def update_supp_order_by_id(db: Session, id: int, order: schemas.PurchaseOrder):
     db_po.total_price = order.cost_price * order.amount
     db_po.product_pn = order.product_pn
 
-    db_prob = read_supp_product(db=db, port_number = order.product_pn)
-    db_po.product_id = db_prob.id
-    db_po.product_pn = db_prob.port_number
-    db_po.product_name = db_prob.name
+    db_prod = read_supp_product(db=db, port_number = order.product_pn)
+    #todo product
+    # db_prod.cost_price
+    # db_prod.amount
+    db_po.product_id = db_prod.id
+    db_po.product_pn = db_prod.port_number
+    db_po.product_name = db_prod.name
 
-    db_supp = read_supp(db=db, supp_taxid = db_prob.supplier_taxid)
+    db_supp = read_supp(db=db, supp_taxid = db_prod.supplier_taxid)
     db_po.supplier_taxid = db_supp.taxid
     db_po.supplier_name = db_supp.name
     db.add(db_po)
@@ -160,12 +173,15 @@ def update_supp_order(db: Session, order_id: int, order: schemas.PurchaseOrder):
     db_po.total_price = order.cost_price * order.amount
     db_po.product_pn = order.product_pn
 
-    db_prob = read_supp_product(db=db, port_number = order.product_pn)
-    db_po.product_id = db_prob.id
-    db_po.product_pn = db_prob.port_number
-    db_po.product_name = db_prob.name
+    db_prod = read_supp_product(db=db, port_number = order.product_pn)
+    #todo product
+    # db_prod.cost_price
+    # db_prod.amount
+    db_po.product_id = db_prod.id
+    db_po.product_pn = db_prod.port_number
+    db_po.product_name = db_prod.name
 
-    db_supp = read_supp(db=db, supp_taxid = db_prob.supplier_taxid)
+    db_supp = read_supp(db=db, supp_taxid = db_prod.supplier_taxid)
     db_po.supplier_taxid = db_supp.taxid
     db_po.supplier_name = db_supp.name
     db.add(db_po)
@@ -212,23 +228,31 @@ def delete_cust(db: Session, cust_taxid: int):
     return res
 
 # -----------------------------------------------------------------------------
-# 新增進貨單
+# 新增出貨單
 def create_cust_order(db: Session, order: schemas.SellOrderCreate):
     try:
         log.debug('')
-        db_prob = read_supp_product(db, port_number = order.product_pn)
+        db_prod = read_supp_product(db, port_number = order.product_pn)
         db_cust = read_cust(db, cust_taxid = order.customer_taxid)
         db_order = models.SellOrder(    customer_taxid = db_cust.taxid, \
                                         customer_name = db_cust.name, \
 
-                                        product_id = db_prob.id, \
-                                        product_pn = db_prob.port_number, \
-                                        product_name = db_prob.name, \
+                                        product_id = db_prod.id, \
+                                        product_pn = db_prod.port_number, \
+                                        product_name = db_prod.name, \
 
                                         sell_price = order.sell_price, \
                                         amount = order.amount, \
                                         total_price = order.sell_price * order.amount )
         db.add(db_order)
+        if (db_prod.sell_price==0) & (db_prod.sell_amount==0): #init
+            db_prod.sell_price = order.sell_price
+        else:
+            db_prod.sell_price = \
+                ((db_prod.sell_price * db_prod.sell_amount) + (order.sell_price * order.amount))//(db_prod.sell_amount + order.amount)
+        db_prod.sell_amount +=  order.amount
+        db_prod.amount = db_prod.amount - order.amount
+        db.add(db_prod)
         db.commit() # 提交儲存到資料庫中
         db.refresh(db_order) # 重新整理
         return db_order
@@ -239,11 +263,11 @@ def create_cust_order(db: Session, order: schemas.SellOrderCreate):
 def count_cust_order_by_id(db: Session, id: int):
     return db.query(models.SellOrder).filter(models.SellOrder.id == id).count()
 
-# 通過id查詢進貨單
+# 通過id查詢出貨單
 def read_cust_order_by_id(db: Session, id: int):
     return db.query(models.SellOrder).filter(models.SellOrder.id == id).first()
 
-# 通過id修改客戶
+# 通過id修改出貨單
 def update_cust_order_by_id(db: Session, id: int, order: schemas.SellOrder):
     db_so = db.query(models.SellOrder).filter(models.SellOrder.id == id).first()
     db_so.sell_price = order.sell_price
@@ -251,10 +275,13 @@ def update_cust_order_by_id(db: Session, id: int, order: schemas.SellOrder):
     db_so.total_price = order.sell_price * order.amount
     db_so.product_pn = order.product_pn
 
-    db_prob = read_supp_product(db, port_number = order.product_pn)
-    db_so.product_id = db_prob.id
-    db_so.product_pn = db_prob.port_number
-    db_so.product_name = db_prob.name
+    db_prod = read_supp_product(db, port_number = order.product_pn)
+    #todo product
+    # db_prod.cost_price
+    # db_prod.amount
+    db_so.product_id = db_prod.id
+    db_so.product_pn = db_prod.port_number
+    db_so.product_name = db_prod.name
 
     db_cust = read_cust(db, cust_taxid = order.customer_taxid)
     db_so.customer_taxid = db_cust.taxid
@@ -264,7 +291,7 @@ def update_cust_order_by_id(db: Session, id: int, order: schemas.SellOrder):
     db.refresh(db_so) # 重新整理
     return db_so
 
-# 通過id刪除進貨單
+# 通過id刪除出貨單
 def delete_cust_order_by_id(db: Session, id: int):
     res = db.query(models.SellOrder).filter(models.SellOrder.id == id).delete()
     db.commit()
@@ -272,11 +299,11 @@ def delete_cust_order_by_id(db: Session, id: int):
 def count_cust_order(db: Session, order_id: int):
     return db.query(models.SellOrder).filter(models.SellOrder.order_id == order_id).count()
 
-# 通過order_id查詢進貨單
+# 通過order_id查詢出貨單
 def read_cust_order(db: Session, order_id: int):
     return db.query(models.SellOrder).filter(models.SellOrder.order_id == order_id).first()
 
-# 通過order_id修改客戶
+# 通過order_id修改出貨單
 def update_cust_order(db: Session, order_id: int, order: schemas.SellOrder):
     db_so = db.query(models.SellOrder).filter(models.SellOrder.order_id == order_id).first()
     db_so.sell_price = order.sell_price
@@ -284,10 +311,13 @@ def update_cust_order(db: Session, order_id: int, order: schemas.SellOrder):
     db_so.total_price = order.sell_price * order.amount
     db_so.product_pn = order.product_pn
 
-    db_prob = read_supp_product(db, port_number = order.product_pn)
-    db_so.product_id = db_prob.id
-    db_so.product_pn = db_prob.port_number
-    db_so.product_name = db_prob.name
+    db_prod = read_supp_product(db, port_number = order.product_pn)
+    #todo product
+    # db_prod.cost_price
+    # db_prod.amount
+    db_so.product_id = db_prod.id
+    db_so.product_pn = db_prod.port_number
+    db_so.product_name = db_prod.name
 
     db_cust = read_cust(db, cust_taxid = order.customer_taxid)
     db_so.customer_taxid = db_cust.taxid
@@ -297,7 +327,7 @@ def update_cust_order(db: Session, order_id: int, order: schemas.SellOrder):
     db.refresh(db_so) # 重新整理
     return db_so
 
-# 通過order_id刪除進貨單
+# 通過order_id刪除出貨單
 def delete_cust_order(db: Session, order_id: int):
     res = db.query(models.SellOrder).filter(models.SellOrder.order_id == order_id).delete()
     db.commit()
