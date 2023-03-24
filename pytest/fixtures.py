@@ -17,6 +17,11 @@ Python 與自動化測試的敲門磚_Day08_Pytest 與 In-memory SQLite
 
 安裝套件
 pip install pytest
+
+https://ithelp.ithome.com.tw/articles/10307902
+Python 與自動化測試的敲門磚_Day29_Pytest 與併發測試
+安裝套件
+pip install pytest-xdist
 """
 
 import pytest
