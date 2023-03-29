@@ -84,6 +84,14 @@ def update_supp(supplier_taxid: int, supplier: schemas.SupplierCreate, db: Sessi
 @app.delete("/supp/{supplier_taxid}", response_model=bool)
 def delete_supp(supplier_taxid: int, db: Session = Depends(get_db)):
     exist_supp(supplier_taxid, db)
+    num = crud.count_supp_all_product(db, supplier_taxid)
+    log.debug('num=%d', num)
+    if num > 0:
+        raise HTTPException(422, "Some Product under this supplier")
+    num = crud.count_supp_order_by_supp(db, supplier_taxid)
+    log.debug('num=%d', num)
+    if num > 0:
+        raise HTTPException(422, "Some Purchase Order under this supplier")
     return crud.delete_supp(db, supplier_taxid)
 
 # -----------------------------------------------------------------------------
@@ -110,14 +118,14 @@ def exist_supp_product(port_number: int, db: Session = Depends(get_db)):
 
 # 通過port_number查詢產品
 @app.get("/supp/{supplier_taxid}/prod/{port_number}", response_model=schemas.Product)
-@app.get("/prods/{port_number}", response_model=schemas.Product)
+@app.get("/prod/{port_number}", response_model=schemas.Product)
 def get_supp_product(port_number: int, db: Session = Depends(get_db)):
     exist_supp_product(port_number, db)
     return crud.read_supp_product(db, port_number)
 
 # 刪除產品 回傳bool
 @app.delete("/supp/{supplier_taxid}/prod/{port_number}", response_model=bool)
-@app.delete("/prods/{port_number}", response_model=bool)
+@app.delete("/prod/{port_number}", response_model=bool)
 def delete_supp_product(port_number: int, db: Session = Depends(get_db)):
     exist_supp_product(port_number, db)
     return crud.delete_supp_product(db, port_number)
@@ -130,12 +138,15 @@ def get_supp_products(supplier_taxid: int, skip: int = 0, limit: int = 100, db: 
 
 # 讀取所有的產品
 @app.get("/prods/", response_model=List[schemas.Product])
-def get_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@app.get("/prods/st={start}", response_model=List[schemas.Product])
+def get_products(start: int = 1, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    if start > 1:
+        skip = start - 1
     return crud.read_all_product(db, skip=skip, limit=limit)
 
 # 修改產品
 @app.patch("/supp/{supplier_taxid}/prod/{port_number}", response_model=schemas.Product)
-@app.patch("/prods/{port_number}", response_model=schemas.Product)
+@app.patch("/prod/{port_number}", response_model=schemas.Product)
 def update_supp_product(port_number: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
     exist_supp_product(port_number, db)
     if product.port_number == '':
@@ -261,14 +272,18 @@ def update_supp(customer_taxid: int, customer: schemas.CustomerCreate, db: Sessi
 # 刪除客戶
 @app.delete("/cust/{customer_taxid}", response_model=bool)
 def delete_cust(customer_taxid: int, db: Session = Depends(get_db)):
+    num = crud.count_cust_order_by_cust(db, customer_taxid)
+    log.debug('num=%d', num)
+    if num > 0:
+        raise HTTPException(422, "Some Sales Order under this customer")
     exist_cust(customer_taxid, db)
     return crud.delete_cust(db, cust_taxid=customer_taxid)
 
 # -----------------------------------------------------------------------------
 # 建立出貨單
-@app.post("/sos/", response_model=schemas.SellOrder)
-# 輸入模型 SellOrderCreate
-def create_cust_order(order: schemas.SellOrderCreate, db: Session = Depends(get_db)):
+@app.post("/sos/", response_model=schemas.SaleOrder)
+# 輸入模型 SaleOrderCreate
+def create_cust_order(order: schemas.SaleOrderCreate, db: Session = Depends(get_db)):
     log.debug('')
     if order.product_pn == '':
         raise HTTPException(422, "Product Port-Number can not be null")
@@ -282,13 +297,13 @@ def create_cust_order(order: schemas.SellOrderCreate, db: Session = Depends(get_
         return crud.create_cust_order(db, order=order)
     except Exception as e:
         log.error(e)
-        raise HTTPException(422, "Create Sell Order error")
+        raise HTTPException(422, "Create Sale Order error")
 
 def exist_cust_order(order_id: int, db: Session = Depends(get_db)):
     num = crud.count_cust_order(order_id, db)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(404, "Sell Order not found")
+        raise HTTPException(404, "Sale Order not found")
     else:
         return True
 
@@ -296,21 +311,21 @@ def exist_cust_order_by_id(id: int, db: Session = Depends(get_db)):
     num = crud.count_cust_order_by_id(db, id)
     log.debug('num=%d', num)
     if num == 0:
-        raise HTTPException(404, "Sell Order ID not found")
+        raise HTTPException(404, "Sale Order ID not found")
     else:
         return True
 
 # 通過id查詢出貨單
-@app.get("/so_id/{id}", response_model=schemas.SellOrder)
+@app.get("/so_id/{id}", response_model=schemas.SaleOrder)
 def get_cust_order_by_id(id: int, db: Session = Depends(get_db)):
     log.debug('')
     exist_cust_order_by_id(id, db)
     return crud.read_cust_order_by_id(db, id)
 
-# 通過id修改出貨單 回傳SellOrder
-@app.patch("/so_id/{id}", response_model=schemas.SellOrder)
-# 輸入模型 SellOrderCreate
-def update_cust_by_id(id: int, order: schemas.SellOrderCreate, db: Session = Depends(get_db)):
+# 通過id修改出貨單 回傳SaleOrder
+@app.patch("/so_id/{id}", response_model=schemas.SaleOrder)
+# 輸入模型 SaleOrderCreate
+def update_cust_by_id(id: int, order: schemas.SaleOrderCreate, db: Session = Depends(get_db)):
     if order.product_pn == '':
         raise HTTPException(422, "Product Port-Number can not be null")
     if order.sale_price < 0:
@@ -324,7 +339,7 @@ def update_cust_by_id(id: int, order: schemas.SellOrderCreate, db: Session = Dep
         return crud.update_cust_order_by_id(db, id, order)
     except Exception as e:
         log.error(e)
-        raise HTTPException(422, "Update Sell Order error")
+        raise HTTPException(422, "Update Sale Order error")
 
 # 通過id刪除出貨單
 @app.delete("/so_id/{id}", response_model=bool)
@@ -334,15 +349,15 @@ def delete_cust_order_by_id(id: int, db: Session = Depends(get_db)):
     return crud.delete_cust_order_by_id(db, id)
 
 # 通過order_id查詢出貨單
-@app.get("/so/{order_id}", response_model=schemas.SellOrder)
+@app.get("/so/{order_id}", response_model=schemas.SaleOrder)
 def get_cust_order(order_id: int, db: Session = Depends(get_db)):
     exist_cust_order(order_id, db)
     return crud.read_cust_order(db, order_id)
 
-# 修改出貨單 回傳SellOrder
-@app.patch("/so/{order_id}", response_model=schemas.SellOrder)
-# 輸入模型 SellOrderCreate
-def update_supp(order_id: int, order: schemas.SellOrderCreate, db: Session = Depends(get_db)):
+# 修改出貨單 回傳SaleOrder
+@app.patch("/so/{order_id}", response_model=schemas.SaleOrder)
+# 輸入模型 SaleOrderCreate
+def update_supp(order_id: int, order: schemas.SaleOrderCreate, db: Session = Depends(get_db)):
     if order.product_pn == '':
         raise HTTPException(422, "Product Port-Number can not be null")
     if order.sale_price < 0:
@@ -356,7 +371,7 @@ def update_supp(order_id: int, order: schemas.SellOrderCreate, db: Session = Dep
         return crud.update_cust_order(db, order_id, order)
     except Exception as e:
         log.error(e)
-        raise HTTPException(422, "Update Sell Order error")
+        raise HTTPException(422, "Update Sale Order error")
 
 # 通過order_id刪除出貨單
 @app.delete("/so/{order_id}", response_model=bool)

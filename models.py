@@ -80,7 +80,7 @@ class Customer(Base):
     name = Column(String(32), unique=True, nullable=False)
 
 # 出貨單
-class SellOrder(Base):
+class SaleOrder(Base):
     __tablename__ = "sale_orders"
     id = Column(Integer, primary_key=True, index=True)
 

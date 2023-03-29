@@ -100,15 +100,15 @@ class Customer(CustomerBase):
 
 # -----------------------------------------------------------------------------
 # 出貨單
-class SellOrderBase(BaseModel):
+class SaleOrderBase(BaseModel):
     sale_price: int
     amount: int
 
-class SellOrderCreate(SellOrderBase):
+class SaleOrderCreate(SaleOrderBase):
     customer_taxid: int
     product_pn: int
 
-class SellOrder(SellOrderBase):
+class SaleOrder(SaleOrderBase):
     id: int
     time: datetime
     time_id: float
