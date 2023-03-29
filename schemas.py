@@ -15,15 +15,16 @@ from pydantic import BaseModel
 # 商品
 class ProductBase(BaseModel):
     cost_price: int = 0
-    sell_price: int = 0
     amount: int = 0
+    sale_price: int = 0
+    sale_amount: int = 0
 
 class ProductCreate(ProductBase):
 	# 請求模型驗證
     port_number: int
     name: str
 
-class Product(BaseModel):
+class Product(ProductBase):
     # 響應模型
     id: int
     supplier_taxid: int
@@ -100,7 +101,7 @@ class Customer(CustomerBase):
 # -----------------------------------------------------------------------------
 # 出貨單
 class SellOrderBase(BaseModel):
-    sell_price: int
+    sale_price: int
     amount: int
 
 class SellOrderCreate(SellOrderBase):
@@ -120,7 +121,7 @@ class SellOrder(SellOrderBase):
     product_id: int
     product_name: str
 
-    sell_price: int
+    sale_price: int
     amount: int
     total_price: int
 

@@ -31,10 +31,11 @@ class Product(Base):
 
     #成本價=進貨價
     cost_price = Column(Integer, nullable=False)
+    #倉庫數
     amount = Column(Integer, default=0, nullable=False)
-    sell_price = Column(Integer, nullable=False)
+    sale_price = Column(Integer, nullable=False)
     #售出數
-    sell_amount = Column(Integer, default=0, nullable=False)
+    sale_amount = Column(Integer, default=0, nullable=False)
 
 # 供應商
 class Supplier(Base):
@@ -80,7 +81,7 @@ class Customer(Base):
 
 # 出貨單
 class SellOrder(Base):
-    __tablename__ = "sell_orders"
+    __tablename__ = "sale_orders"
     id = Column(Integer, primary_key=True, index=True)
 
     time = Column(DateTime(timezone=True), default=func.now(), nullable=False)
@@ -98,7 +99,7 @@ class SellOrder(Base):
     product_pn = Column(Integer, ForeignKey("products.port_number"), index=True, nullable=False)
     product_name = Column(String(32), ForeignKey("products.name"), nullable=False)
 
-    sell_price = Column(Integer, default=0, nullable=False)
+    sale_price = Column(Integer, default=0, nullable=False)
     amount = Column(Integer, default=0, nullable=False)
     total_price = Column(Integer, default=0, nullable=False)
 

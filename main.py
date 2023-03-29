@@ -272,7 +272,7 @@ def create_cust_order(order: schemas.SellOrderCreate, db: Session = Depends(get_
     log.debug('')
     if order.product_pn == '':
         raise HTTPException(422, "Product Port-Number can not be null")
-    if order.sell_price < 0:
+    if order.sale_price < 0:
         raise HTTPException(422, "Price is not valid")
     if order.amount <= 0:
         raise HTTPException(422, "Amount is not valid")
@@ -313,7 +313,7 @@ def get_cust_order_by_id(id: int, db: Session = Depends(get_db)):
 def update_cust_by_id(id: int, order: schemas.SellOrderCreate, db: Session = Depends(get_db)):
     if order.product_pn == '':
         raise HTTPException(422, "Product Port-Number can not be null")
-    if order.sell_price < 0:
+    if order.sale_price < 0:
         raise HTTPException(422, "Price is not valid")
     if order.amount <= 0:
         raise HTTPException(422, "Amount is not valid")
@@ -345,7 +345,7 @@ def get_cust_order(order_id: int, db: Session = Depends(get_db)):
 def update_supp(order_id: int, order: schemas.SellOrderCreate, db: Session = Depends(get_db)):
     if order.product_pn == '':
         raise HTTPException(422, "Product Port-Number can not be null")
-    if order.sell_price < 0:
+    if order.sale_price < 0:
         raise HTTPException(422, "Price is not valid")
     if order.amount <= 0:
         raise HTTPException(422, "Amount is not valid")

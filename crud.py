@@ -241,16 +241,16 @@ def create_cust_order(db: Session, order: schemas.SellOrderCreate):
                                         product_pn = db_prod.port_number, \
                                         product_name = db_prod.name, \
 
-                                        sell_price = order.sell_price, \
+                                        sale_price = order.sale_price, \
                                         amount = order.amount, \
-                                        total_price = order.sell_price * order.amount )
+                                        total_price = order.sale_price * order.amount )
         db.add(db_order)
-        if (db_prod.sell_price==0) & (db_prod.sell_amount==0): #init
-            db_prod.sell_price = order.sell_price
+        if (db_prod.sale_price==0) & (db_prod.sale_amount==0): #init
+            db_prod.sale_price = order.sale_price
         else:
-            db_prod.sell_price = \
-                ((db_prod.sell_price * db_prod.sell_amount) + (order.sell_price * order.amount))//(db_prod.sell_amount + order.amount)
-        db_prod.sell_amount +=  order.amount
+            db_prod.sale_price = \
+                ((db_prod.sale_price * db_prod.sale_amount) + (order.sale_price * order.amount))//(db_prod.sale_amount + order.amount)
+        db_prod.sale_amount +=  order.amount
         db_prod.amount = db_prod.amount - order.amount
         db.add(db_prod)
         db.commit() # 提交儲存到資料庫中
@@ -270,9 +270,9 @@ def read_cust_order_by_id(db: Session, id: int):
 # 通過id修改出貨單
 def update_cust_order_by_id(db: Session, id: int, order: schemas.SellOrder):
     db_so = db.query(models.SellOrder).filter(models.SellOrder.id == id).first()
-    db_so.sell_price = order.sell_price
+    db_so.sale_price = order.sale_price
     db_so.amount = order.amount
-    db_so.total_price = order.sell_price * order.amount
+    db_so.total_price = order.sale_price * order.amount
     db_so.product_pn = order.product_pn
 
     db_prod = read_supp_product(db, port_number = order.product_pn)
@@ -306,9 +306,9 @@ def read_cust_order(db: Session, order_id: int):
 # 通過order_id修改出貨單
 def update_cust_order(db: Session, order_id: int, order: schemas.SellOrder):
     db_so = db.query(models.SellOrder).filter(models.SellOrder.order_id == order_id).first()
-    db_so.sell_price = order.sell_price
+    db_so.sale_price = order.sale_price
     db_so.amount = order.amount
-    db_so.total_price = order.sell_price * order.amount
+    db_so.total_price = order.sale_price * order.amount
     db_so.product_pn = order.product_pn
 
     db_prod = read_supp_product(db, port_number = order.product_pn)
