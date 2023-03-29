@@ -11,7 +11,8 @@ import random, string
 
 use_fixtures = [sqlite_session_fixture]
 
-# sqlite_session from @pytest.fixture(name='sqlite_session') in fixtures.py
+# class TestSupp: # Test*
+    # sqlite_session from @pytest.fixture(name='sqlite_session') in fixtures.py
 def test_supp_(sqlite_session: Session):
     supplier = schemas.SupplierCreate(name="test", taxid=12345678)
     result: Supplier = create_supp(supplier=supplier, request=Request, db=sqlite_session)
@@ -86,7 +87,7 @@ def test_supp_taxid_exist(sqlite_session: Session):
     assert exc.value.status_code == 422
 
 # -----------------------------------------------------------------------------
-
+# 隨機產生內容
 def test_supp_x(sqlite_session: Session):
     # 大小寫字母
     name = ''.join(random.choice(string.ascii_letters) for x in range(10))
@@ -96,4 +97,8 @@ def test_supp_x(sqlite_session: Session):
     assert (result.name == name)
     assert (result.taxid == taxid)
     assert (result.id != None)
+
+def test_supp_x100(sqlite_session: Session):
+    for i in range(100):
+        test_supp_x(sqlite_session)
    

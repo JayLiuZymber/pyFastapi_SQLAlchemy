@@ -98,8 +98,7 @@ def create_supp_order(db: Session, order: schemas.PurchaseOrderCreate):
     db.add(db_prod)
     db_supp = read_supp(db=db, supp_taxid = db_prod.supplier_taxid)
     # db_time = DateTime(timezone=True, server_default=func.now())
-    db_order = models.PurchaseOrder( #order_id = db_time.strf,\
-                                    supplier_taxid = db_supp.taxid, \
+    db_order = models.PurchaseOrder(supplier_taxid = db_supp.taxid, \
                                     supplier_name = db_supp.name, \
 
                                     product_id = db_prod.id, \
