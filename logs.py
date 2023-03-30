@@ -1,6 +1,6 @@
 # logs.py
 """
-logs 快速設定版
+logs 快速設定版 by Jay
 """
 
 import logging
@@ -62,10 +62,12 @@ def getLogger(title: str, level: int = DEBUG, toFile: bool = False):
     handler.setFormatter(formatter)
 
     fileformatter = formatter
+    # 2023-03-30 16:03:16,351 DEBUG:(main) main.py, line 104 | xxx
     fileformatter: logging.Formatter = logging.Formatter( \
         '%(asctime)s'+ Fore.YELLOW +'%(levelname)s:(%(name)s)'+ Fore.RESET +' %(filename)s, line %(lineno)d | %(message)s')
-    fileHandler: logging.FileHandler = logging.FileHandler(filename='log.ansi', encoding='utf-8', mode='w')
+    fileHandler: logging.FileHandler = logging.FileHandler(filename='log.ansi', encoding='utf-8', mode='w') #'w'=每次執行會覆蓋之前紀錄
     fileHandler.setFormatter(fileformatter)
+    # VS Code安裝'ANSI Colors'套件 開啟*.ansi檔案 直接含顏色顯示內容
 
     if toStream:
         logger.addHandler(handler)
