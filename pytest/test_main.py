@@ -98,8 +98,21 @@ def test_supp_x(sqlite_session: Session):
     assert (result.name == name)
     assert (result.taxid == taxid)
     assert (result.id != None)
+    return result
 
 def test_supp_x100(sqlite_session: Session):
     for i in range(100):
         test_supp_x(sqlite_session)
 
+# -----------------------------------------------------------------------------
+def test_delete_supp(sqlite_session: Session):
+    supp = test_supp_x(sqlite_session)
+    result: Boolean = delete_supp(supp.taxid, sqlite_session)
+    assert (result == True)
+"""
+def test_delete_supp_not_exist():
+    with pytest.raises(HTTPException) as exc:
+        delete_supp(0, Session)
+    assert isinstance(exc.value, HTTPException)
+    assert exc.value.status_code == 422
+"""
