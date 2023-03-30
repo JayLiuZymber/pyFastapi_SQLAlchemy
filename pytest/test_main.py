@@ -5,19 +5,20 @@ from models import * # class
 from fixtures import sqlite_session_fixture
 from sqlalchemy.orm import Session
 from fastapi import Request
+from prints import printstd,  printout
 import schemas
 import pytest
 import random, string
 
 use_fixtures = [sqlite_session_fixture]
 
-# class TestSupp: # Test*
-    # sqlite_session from @pytest.fixture(name='sqlite_session') in fixtures.py
+# sqlite_session from @pytest.fixture(name='sqlite_session') in fixtures.py
 def test_supp_(sqlite_session: Session):
     supplier = schemas.SupplierCreate(name="test", taxid=12345678)
     result: Supplier = create_supp(supplier=supplier, request=Request, db=sqlite_session)
 
-    # print(result.__dict__)
+    # printstd(result.__dict__) #'終端機'頁
+    printout(result.__dict__) #'輸出'頁
     assert (result.name == supplier.name)
     assert (result.taxid == supplier.taxid)
     assert (result.id != None )
@@ -31,7 +32,7 @@ def test_supp_2(sqlite_session: Session):
     assert (result.name == input.name)
     assert (result.taxid == input.taxid)
     assert (result.id != None)
-    
+
 def test_supp_3(sqlite_session: Session):
     name = "supplier"
     taxid = 34
@@ -65,14 +66,14 @@ def test_supp_taxid_0():
         create_supp(supplier, Request, Session)
     assert isinstance(exc.value, HTTPException)
     assert exc.value.status_code == 422
-    
+
 def test_supp_taxid_negative():
     with pytest.raises(HTTPException) as exc:
         supplier = schemas.SupplierCreate(name="name", taxid=-123)
         create_supp(supplier, Request, Session)
     assert isinstance(exc.value, HTTPException)
     assert exc.value.status_code == 422
-    
+
 def test_supp_taxid_exist(sqlite_session: Session):
     with pytest.raises(HTTPException) as exc:
         name = "supplier"
@@ -101,4 +102,4 @@ def test_supp_x(sqlite_session: Session):
 def test_supp_x100(sqlite_session: Session):
     for i in range(100):
         test_supp_x(sqlite_session)
-   
+
