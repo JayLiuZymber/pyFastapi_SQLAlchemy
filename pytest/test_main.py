@@ -89,8 +89,24 @@ def test_supp_taxid_exist(sqlite_session: Session):
 
 # -----------------------------------------------------------------------------
 # 隨機產生內容
-def test_supp_x(sqlite_session: Session):
-    # 大小寫字母
+class TestSupp:
+    def test_supp_x(self, sqlite_session: Session):
+        # 大小寫字母
+        name = ''.join(random.choice(string.ascii_letters) for x in range(10))
+        taxid = random.randint(1, 99999999)
+        input = schemas.SupplierCreate(name=name, taxid=taxid)
+        result: Supplier = create_supp(input, Request, sqlite_session)
+        assert (result.name == name)
+        assert (result.taxid == taxid)
+        assert (result.id != None)
+        # return result
+
+    def test_supp_x10(self, sqlite_session: Session):
+        for i in range(10):
+            TestSupp.test_supp_x(self, sqlite_session)
+
+# -----------------------------------------------------------------------------
+def test_delete_supp(sqlite_session: Session):
     name = ''.join(random.choice(string.ascii_letters) for x in range(10))
     taxid = random.randint(1, 99999999)
     input = schemas.SupplierCreate(name=name, taxid=taxid)
@@ -98,21 +114,12 @@ def test_supp_x(sqlite_session: Session):
     assert (result.name == name)
     assert (result.taxid == taxid)
     assert (result.id != None)
-    return result
 
-def test_supp_x100(sqlite_session: Session):
-    for i in range(100):
-        test_supp_x(sqlite_session)
+    res: Boolean = delete_supp(result.taxid, sqlite_session)
+    assert (res == True)
 
-# -----------------------------------------------------------------------------
-def test_delete_supp(sqlite_session: Session):
-    supp = test_supp_x(sqlite_session)
-    result: Boolean = delete_supp(supp.taxid, sqlite_session)
-    assert (result == True)
-"""
 def test_delete_supp_not_exist():
     with pytest.raises(HTTPException) as exc:
         delete_supp(0, Session)
     assert isinstance(exc.value, HTTPException)
     assert exc.value.status_code == 422
-"""
