@@ -7,6 +7,7 @@
 
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 import crud, schemas
 from database import SessionLocal, engine, Base
 from sqlalchemy.orm import Session
@@ -30,6 +31,26 @@ def get_db():
         yield db
     finally:
         db.close()
+"""
+CORS (Cross-Origin Resource Sharing) - FastAPI
+https://fastapi.tiangolo.com/tutorial/cors/
+fastapi使用經驗筆記 | Ciao Space
+https://ciao-chung.com/page/article/fastapi-note
+ """
+origins = [ #NOT uvicorn 8000 port
+    "http://localhost",
+    "http://localhost:3000", #FE-APP MUI
+	"http://127.0.0.1",
+	"http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 首頁
 @app.get("/")
